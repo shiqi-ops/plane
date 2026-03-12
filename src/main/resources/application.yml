@@ -1,0 +1,13 @@
+spring:
+  application:
+     name: plane
+  profiles:
+    active: dev
+  datasource:
+    driver-class-name: ${shiqi.datasource.driver-class-name}
+    url: jdbc:mysql://${shiqi.datasource.host}:${shiqi.datasource.port}/${shiqi.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${shiqi.datasource.username}
+    password: ${shiqi.datasource.password}
+jwt:
+  secret: "my-super-secret-key-for-plane-project-must-be-long-enough"
+  expiration: 3600000
