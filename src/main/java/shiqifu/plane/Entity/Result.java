@@ -1,46 +1,49 @@
 package shiqifu.plane.Entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.google.gson.annotations.SerializedName;
+import lombok.*;
 
 @Data
 @Builder
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 public class Result {
-    @JsonProperty("model")
     private String model;
 
-    @JsonProperty("dataset")
     private String dataset;
 
-    @JsonProperty("attack")
     private String attack;
 
-    @JsonProperty("eps")
-    private Double eps;
+    private double eps;
 
-    @JsonProperty("clean accuracy")
-    private Double cleanAccuracy;
+    @SerializedName("clean_accuracy")
+    @JsonProperty("clean_accuracy")
+    private double cleanAccuracy;
 
-    @JsonProperty("adv accuracy")
-    private Double advAccuracy;
+    @SerializedName("adv_accuracy")
+    @JsonProperty("adv_accuracy")
+    private double advAccuracy;
 
-    @JsonProperty("accuracy drop")
-    private Double accuracyDrop;
+    @SerializedName("accuracy_drop")
+    @JsonProperty("accuracy_drop")
+    private double accuracyDrop;
 
-    @JsonProperty("robust score")
-    private Double robustScore;
 
-    @JsonProperty("robust level")
+    @SerializedName("robust_level")
+    @JsonProperty("robust_level")
     private String robustLevel;
 
-    @JsonProperty("curve path")
+    @SerializedName("robust_score")
+    @JsonProperty("robust_score")
+    private double robustScore;
+
+    @SerializedName("curve_path")
+    @JsonProperty("curve_path")
     private String curvePath;
 
-    @JsonProperty("compare path")
+    @SerializedName("compare_path")
+    @JsonProperty("compare_path")
     private String comparePath;
 }

@@ -6,3 +6,6 @@ shiqi:
     database: myweb
     username: root
     password: Zhouyi20070102%
+  ai:
+    api-key: sk-64fcb9d69a284eea8619d4893c851902
+    base-url: https://dashscope.aliyuncs.com/compatible-mode/v1

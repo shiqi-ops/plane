@@ -1,4 +1,4 @@
-package shiqifu.plane.service;
+package shiqifu.plane.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -14,11 +14,11 @@ import java.util.Collections;
 import java.util.Optional;
 
 @Service
-public class UserService implements UserDetailsService {
+public class UserServiceImpl implements UserDetailsService {
     @Autowired
     private PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
-    public UserService(UserMapper userMapper) {
+    public UserServiceImpl(UserMapper userMapper) {
         this.userMapper = userMapper;
     }
     @Override
@@ -38,6 +38,8 @@ public class UserService implements UserDetailsService {
     }
     public void save(User user){
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole("ROLE_USER");
+        user.setEnabled(true);
         userMapper.save(user);
     }
 }

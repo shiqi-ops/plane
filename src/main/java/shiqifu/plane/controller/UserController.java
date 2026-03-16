@@ -8,7 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import shiqifu.plane.Entity.User;
 import shiqifu.plane.Entity.UserLoginDTO;
-import shiqifu.plane.service.UserService;
+import shiqifu.plane.service.impl.UserServiceImpl;
 import shiqifu.plane.util.JwtUtil;
 
 import java.util.HashMap;
@@ -21,7 +21,7 @@ public class UserController {
     @Autowired
     private JwtUtil jwtUtil;
     @Autowired
-    private UserService userService;
+    private UserServiceImpl userService;
     @Autowired
     private PasswordEncoder passwordEncoder;
     @PostMapping("/login")
@@ -46,7 +46,7 @@ public class UserController {
         map.put("username",username);
         return map;
     }
-    @PostMapping("register")
+    @PostMapping("/register")
     public void register(@RequestBody User user){
         userService.save(user);
     }
