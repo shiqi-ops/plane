@@ -1,12 +1,6 @@
 <template>
   <div class="page">
-    <header class="navbar">
-      <div class="navbar-brand">
-        <span class="brand-icon">⬡</span>
-        <span class="brand-name">DRONE<em>EVAL</em></span>
-      </div>
-      <button class="back-btn" @click="router.push('/home')">← 返回</button>
-    </header>
+  
 
     <div class="content">
       <div class="page-header">
@@ -173,7 +167,15 @@ function clearFile() {
   selectedFile.value = null
   fileInput.value.value = ''
 }
-
+function saveHistory(entry) {
+  const list = JSON.parse(localStorage.getItem('evalHistory') || '[]')
+  list.push({
+    id: Date.now(),
+    date: new Date().toLocaleDateString('zh-CN'),
+    ...entry,
+  })
+  localStorage.setItem('evalHistory', JSON.stringify(list))
+}
 async function handleSubmit() {
   loading.value = true
   result.value = null
@@ -188,6 +190,7 @@ async function handleSubmit() {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     result.value = res.data
+    saveHistory({ type: 'own', model: 'custom', attack: form.value.attack, result: res.data })
   } catch (e) {
     alert('评测失败，请检查后端连接')
   } finally {
@@ -206,42 +209,6 @@ async function handleSubmit() {
   font-family: 'Noto Sans SC', sans-serif;
 }
 
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 18px 48px;
-  border-bottom: 1px solid #1e2530;
-  position: sticky;
-  top: 0;
-  background: #0a0c0f;
-  z-index: 10;
-}
-.navbar-brand {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 1.1rem;
-  letter-spacing: 0.15em;
-  color: #e8eaed;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.brand-icon { color: #f43f5e; font-size: 1.4rem; }
-.brand-name em { font-style: normal; color: #f43f5e; }
-
-.back-btn {
-  background: none;
-  border: 1px solid #374151;
-  color: #9ca3af;
-  padding: 5px 14px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  border-radius: 2px;
-  transition: all 0.2s;
-}
-.back-btn:hover { border-color: #f43f5e; color: #f43f5e; }
 
 .content {
   max-width: 900px;
@@ -254,10 +221,10 @@ async function handleSubmit() {
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.7rem;
   letter-spacing: 0.2em;
-  color: #374151;
+  color: #d4d8de;
 }
 .page-title { font-size: 2rem; font-weight: 700; color: #f0f2f5; margin: 8px 0; }
-.page-desc { color: #6b7280; font-size: 0.9rem; }
+.page-desc { color: #d4d8de; font-size: 0.9rem; }
 
 .form-sections { display: flex; flex-direction: column; gap: 40px; }
 
@@ -272,7 +239,7 @@ async function handleSubmit() {
 
 /* 上传区 */
 .upload-zone {
-  border: 1.5px dashed #1e2530;
+  border: 1.5px dashed #9ca3af;
   border-radius: 6px;
   padding: 48px;
   text-align: center;
@@ -286,19 +253,19 @@ async function handleSubmit() {
 }
 .upload-zone--done { border-style: solid; border-color: #f43f5e; }
 
-.upload-icon { font-size: 2rem; color: #374151; display: block; margin-bottom: 12px; }
-.upload-placeholder p { color: #6b7280; font-size: 0.9rem; margin: 4px 0; }
+.upload-icon { font-size: 2rem; color: #d4d8de; display: block; margin-bottom: 12px; }
+.upload-placeholder p { color: #d4d8de; font-size: 0.9rem; margin: 4px 0; }
 .upload-placeholder strong { color: #e8eaed; }
-.upload-hint { font-size: 0.78rem !important; color: #374151 !important; }
+.upload-hint { font-size: 0.78rem !important; color: #d4d8de !important; }
 
 .upload-done { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .done-icon { font-size: 2rem; color: #f43f5e; }
 .file-name { font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; color: #e8eaed; }
-.file-size { font-size: 0.8rem; color: #6b7280; }
+.file-size { font-size: 0.8rem; color: #d4d8de; }
 .clear-btn {
   margin-top: 8px;
   background: none;
-  border: 1px solid #374151;
+  border: 1px solid #d4d8de;
   color: #9ca3af;
   padding: 4px 12px;
   font-family: 'Share Tech Mono', monospace;
@@ -316,7 +283,7 @@ async function handleSubmit() {
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.68rem;
   letter-spacing: 0.12em;
-  color: #374151;
+  color: #d4d8de;
   text-transform: uppercase;
   margin-bottom: 8px;
 }
@@ -326,7 +293,7 @@ async function handleSubmit() {
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.78rem;
   padding: 6px 14px;
-  border: 1px solid #1e2530;
+  border: 1px solid #9ca3af;
   border-radius: 2px;
   background: #0d1017;
   color: #9ca3af;
@@ -334,14 +301,14 @@ async function handleSubmit() {
   transition: all 0.15s;
   letter-spacing: 0.05em;
 }
-.atk-chip:hover { border-color: #374151; color: #e8eaed; }
+.atk-chip:hover { border-color: #d4d8de; color: #e8eaed; }
 .atk-chip.active { border-color: #f43f5e; color: #f43f5e; background: #130d0e; }
 
 /* eps */
 .eps-row { display: flex; align-items: center; gap: 16px; }
 .eps-input {
   background: #0d1017;
-  border: 1px solid #1e2530;
+  border: 1px solid #9ca3af;
   color: #e8eaed;
   padding: 10px 16px;
   font-family: 'Share Tech Mono', monospace;
@@ -352,7 +319,7 @@ async function handleSubmit() {
   transition: border 0.2s;
 }
 .eps-input:focus { border-color: #f43f5e; }
-.eps-hint { font-size: 0.8rem; color: #374151; font-family: 'Share Tech Mono', monospace; }
+.eps-hint { font-size: 0.8rem; color: #d4d8de; font-family: 'Share Tech Mono', monospace; }
 
 /* 提交按钮 */
 .submit-btn {
@@ -386,7 +353,7 @@ async function handleSubmit() {
 /* 结果 */
 .result-box {
   margin-top: 48px;
-  border: 1px solid #1e2530;
+  border: 1px solid #9ca3af;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -396,14 +363,14 @@ async function handleSubmit() {
   letter-spacing: 0.15em;
   color: #f43f5e;
   padding: 16px 24px;
-  border-bottom: 1px solid #1e2530;
+  border-bottom: 1px solid #9ca3af;
   background: #0d1017;
 }
 .result-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1px;
-  background: #1e2530;
+  background: #9ca3af;
 }
 .result-item {
   display: flex;
@@ -416,7 +383,7 @@ async function handleSubmit() {
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.68rem;
   letter-spacing: 0.1em;
-  color: #374151;
+  color: #d4d8de;
   text-transform: uppercase;
 }
 .result-value {

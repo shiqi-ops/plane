@@ -128,26 +128,26 @@ async function handleLogin() {
     return
   }
 
-  // localStorage.setItem('token', 'mock-token')
-  // localStorage.setItem('username', form.value.username)
-  // router.push('/home')
-  // return
+  localStorage.setItem('token', 'mock-token')
+  localStorage.setItem('username', form.value.username)
+  router.push('/home')
+  return
 
-  loading.value = true
-  try {
-    const res = await api.post('/auth/login', {
-      username: form.value.username,
-      password: form.value.password,
-    })
-    // 后端返回 { token: '...', username: '...' }
-    localStorage.setItem('token', res.data.token)
-    localStorage.setItem('username', res.data.username ?? form.value.username)
-    router.push('/home')
-  } catch (e) {
-    error.value = e.response?.data?.message ?? '用户名或密码错误'
-  } finally {
-    loading.value = false
-  }
+  // loading.value = true
+  // try {
+  //   const res = await api.post('/auth/login', {
+  //     username: form.value.username,
+  //     password: form.value.password,
+  //   })
+  //   // 后端返回 { token: '...', username: '...' }
+  //   localStorage.setItem('token', res.data.token)
+  //   localStorage.setItem('username', res.data.username ?? form.value.username)
+  //   router.push('/home')
+  // } catch (e) {
+  //   error.value = e.response?.data?.message ?? '用户名或密码错误'
+  // } finally {
+  //   loading.value = false
+  // }
 }
 
 // ── 注册 ──────────────────────────────────────
@@ -205,8 +205,8 @@ async function handleRegister() {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(#1e2530 1px, transparent 1px),
-    linear-gradient(90deg, #1e2530 1px, transparent 1px);
+    linear-gradient(#9ca3af 1px, transparent 1px),
+    linear-gradient(90deg, #9ca3af 1px, transparent 1px);
   background-size: 48px 48px;
   opacity: 0.3;
   pointer-events: none;
@@ -248,7 +248,7 @@ async function handleRegister() {
 .login-card {
   width: 100%;
   background: #0d1017;
-  border: 1px solid #1e2530;
+  border: 1px solid #9ca3af;
   border-top: 2px solid #f59e0b;
   border-radius: 4px;
   overflow: hidden;
@@ -257,14 +257,14 @@ async function handleRegister() {
 /* ── Tab ── */
 .card-header {
   padding: 24px 32px 20px;
-  border-bottom: 1px solid #1e2530;
+  border-bottom: 1px solid #9ca3af;
 }
 
 .tabs {
   display: flex;
   gap: 0;
   margin-bottom: 14px;
-  border: 1px solid #1e2530;
+  border: 1px solid #9ca3af;
   border-radius: 2px;
   overflow: hidden;
   width: fit-content;
@@ -277,11 +277,11 @@ async function handleRegister() {
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.78rem;
   letter-spacing: 0.12em;
-  color: #374151;
+  color: #d4d8de;
   cursor: pointer;
   transition: all 0.2s;
 }
-.tab:first-child { border-right: 1px solid #1e2530; }
+.tab:first-child { border-right: 1px solid #9ca3af; }
 .tab.active {
   background: #f59e0b;
   color: #0a0c0f;
@@ -293,7 +293,7 @@ async function handleRegister() {
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.7rem;
   letter-spacing: 0.1em;
-  color: #374151;
+  color: #d4d8de;
   margin: 0;
 }
 
@@ -317,7 +317,7 @@ async function handleRegister() {
 
 .field-input {
   background: #080a0d;
-  border: 1px solid #1e2530;
+  border: 1px solid #9ca3af;
   color: #e8eaed;
   padding: 11px 16px;
   font-family: 'Noto Sans SC', sans-serif;
@@ -328,7 +328,7 @@ async function handleRegister() {
   width: 100%;
   box-sizing: border-box;
 }
-.field-input::placeholder { color: #374151; }
+.field-input::placeholder { color: #d4d8de; }
 .field-input:focus { border-color: #f59e0b; }
 
 .error {
@@ -381,6 +381,6 @@ async function handleRegister() {
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.65rem;
   letter-spacing: 0.15em;
-  color: #1e2530;
+  color: #9ca3af;
 }
 </style>

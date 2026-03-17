@@ -1,12 +1,6 @@
 <template>
   <div class="page">
-    <header class="navbar">
-      <div class="navbar-brand">
-        <span class="brand-icon">⬡</span>
-        <span class="brand-name">DRONE<em>EVAL</em></span>
-      </div>
-      <button class="back-btn" @click="router.push('/home')">← 返回</button>
-    </header>
+   
 
     <div class="content">
       <div class="page-header">
@@ -50,33 +44,52 @@
       </button>
 
       <!-- 结果 -->
-      <div v-if="result" class="result-box">
-        <h2 class="result-title">评测结果</h2>
-        <div class="result-meta">
-          <span>模型：{{ result.model }}</span>
-          <span>数据集大小：{{ result.dataset_size }}</span>
-          <span>清洁准确率：{{ (result.clean_accuracy * 100).toFixed(2) }}%</span>
-          <span class="result-level" :class="'level-' + result.robust_level">
-            鲁棒等级：{{ result.robust_level }}
-          </span>
-        </div>
+     <div v-if="result" class="result-box">
+      <h2 class="result-title">评测结果</h2>
 
-        <div class="attack-results">
-          <div v-for="(atk, i) in result.attack_results" :key="atk.attack" class="atk-row">
-            <span class="atk-rank">#{{ i + 1 }}</span>
-            <span class="atk-name">{{ atk.attack }}</span>
-            <div class="atk-bar-wrap">
-              <div class="atk-bar" :style="{ width: (atk.adv_accuracy * 100) + '%' }"></div>
-            </div>
-            <span class="atk-acc">对抗准确率 {{ (atk.adv_accuracy * 100).toFixed(1) }}%</span>
-            <span class="atk-rate">攻击成功率 {{ (atk.attack_success_rate * 100).toFixed(1) }}%</span>
+      <!-- 基本信息 -->
+      <div class="result-meta">
+        <span>模型：{{ result.model }}</span>
+        <span>数据集：{{ result.dataset }}</span>
+        <span>数据量：{{ result.dataset_size }}</span>
+        <span>清洁准确率：{{ (result.clean_accuracy * 100).toFixed(2) }}%</span>
+        <span class="result-level" :class="'level-' + result.robust_level">
+          鲁棒等级：{{ result.robust_level }}
+        </span>
+      </div>
+
+      <!-- 各攻击结果柱状条 -->
+      <div class="section-label">各攻击详情</div>
+      <div class="attack-results">
+        <div v-for="(atk, i) in result.attack_results" :key="atk.attack" class="atk-row">
+          <span class="atk-rank">#{{ i + 1 }}</span>
+          <span class="atk-name">{{ atk.attack }}</span>
+          <div class="atk-bar-wrap">
+            <div class="atk-bar" :style="{ width: (atk.adv_accuracy * 100) + '%' }"></div>
           </div>
-        </div>
-
-        <div class="result-score">
-          鲁棒评分：<strong>{{ result.robust_score?.toFixed(2) }}</strong>
+          <span class="atk-acc">对抗准确率 {{ (atk.adv_accuracy * 100).toFixed(1) }}%</span>
+          <span class="atk-drop">下降 {{ (atk.accuracy_drop * 100).toFixed(1) }}%</span>
+          <span class="atk-rate">攻击成功率 {{ (atk.attack_success_rate * 100).toFixed(1) }}%</span>
         </div>
       </div>
+
+      <!-- ranking 排名（按攻击成功率从高到低） -->
+      <div class="section-label">攻击强度排名</div>
+      <div class="ranking-list">
+        <div v-for="(atk, i) in result.ranking" :key="'r' + atk.attack" class="rank-row">
+          <span class="rank-medal" :class="'medal-' + (i + 1)">{{ i + 1 }}</span>
+          <span class="rank-name">{{ atk.attack }}</span>
+          <div class="rank-bar-wrap">
+            <div class="rank-bar" :style="{ width: (atk.attack_success_rate * 100) + '%' }"></div>
+          </div>
+          <span class="rank-rate">{{ (atk.attack_success_rate * 100).toFixed(1) }}%</span>
+        </div>
+      </div>
+
+      <div class="result-score">
+        鲁棒评分：<strong>{{ result.robust_score?.toFixed(2) }}</strong>
+      </div>
+    </div>
     </div>
   </div>
 </template>
@@ -107,6 +120,16 @@ const result = ref(null)
 
 const canSubmit = computed(() => form.value.model && form.value.attack_group)
 
+function saveHistory(entry) {
+  const list = JSON.parse(localStorage.getItem('evalHistory') || '[]')
+  list.push({
+    id: Date.now(),
+    date: new Date().toLocaleDateString('zh-CN'),
+    ...entry,
+  })
+  localStorage.setItem('evalHistory', JSON.stringify(list))
+}
+
 async function handleSubmit() {
   loading.value = true
   result.value = null
@@ -119,6 +142,7 @@ async function handleSubmit() {
     }
     const res = await api.post('/evaluate/more', payload)
     result.value = res.data
+    saveHistory({ type: 'more', model: form.value.model, attack_group: form.value.attack_group, result: res.data })
   } catch (e) {
     alert('评测失败，请检查后端连接')
   } finally {
@@ -137,43 +161,6 @@ async function handleSubmit() {
   font-family: 'Noto Sans SC', sans-serif;
 }
 
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 18px 48px;
-  border-bottom: 1px solid #1e2530;
-  position: sticky;
-  top: 0;
-  background: #0a0c0f;
-  z-index: 10;
-}
-
-.navbar-brand {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 1.1rem;
-  letter-spacing: 0.15em;
-  color: #e8eaed;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.brand-icon { color: #06b6d4; font-size: 1.4rem; }
-.brand-name em { font-style: normal; color: #06b6d4; }
-
-.back-btn {
-  background: none;
-  border: 1px solid #374151;
-  color: #9ca3af;
-  padding: 5px 14px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  border-radius: 2px;
-  transition: all 0.2s;
-}
-.back-btn:hover { border-color: #06b6d4; color: #06b6d4; }
 
 .content {
   max-width: 900px;
@@ -186,7 +173,7 @@ async function handleSubmit() {
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.7rem;
   letter-spacing: 0.2em;
-  color: #374151;
+  color: #d4d8de;
 }
 .page-title {
   font-size: 2rem;
@@ -194,7 +181,7 @@ async function handleSubmit() {
   color: #f0f2f5;
   margin: 8px 0;
 }
-.page-desc { color: #6b7280; font-size: 0.9rem; }
+.page-desc { color: #d4d8de; font-size: 0.9rem; }
 
 .form-grid {
   display: flex;
@@ -222,22 +209,22 @@ async function handleSubmit() {
   align-items: center;
   gap: 16px;
   padding: 14px 20px;
-  border: 1px solid #1e2530;
+  border: 1px solid #9ca3af;
   border-radius: 4px;
   background: #0d1017;
   cursor: pointer;
   transition: all 0.2s;
 }
-.radio-card:hover { border-color: #374151; }
+.radio-card:hover { border-color: #d4d8de; }
 .radio-card.active { border-color: #06b6d4; background: #0b1921; }
 
 .radio-name { font-size: 0.95rem; color: #e8eaed; flex: 1; }
 .radio-tag {
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.68rem;
-  color: #6b7280;
+  color: #d4d8de;
   background: #13171f;
-  border: 1px solid #1e2530;
+  border: 1px solid #9ca3af;
   padding: 2px 8px;
   border-radius: 2px;
 }
@@ -248,7 +235,7 @@ async function handleSubmit() {
 .combo-attacks {
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.72rem;
-  color: #6b7280;
+  color: #d4d8de;
   letter-spacing: 0.05em;
 }
 
@@ -283,7 +270,7 @@ async function handleSubmit() {
 /* 结果区 */
 .result-box {
   margin-top: 48px;
-  border: 1px solid #1e2530;
+  border: 1px solid #9ca3af;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -293,7 +280,7 @@ async function handleSubmit() {
   letter-spacing: 0.15em;
   color: #06b6d4;
   padding: 16px 24px;
-  border-bottom: 1px solid #1e2530;
+  border-bottom: 1px solid #9ca3af;
   background: #0d1017;
 }
 .result-meta {
@@ -303,7 +290,7 @@ async function handleSubmit() {
   padding: 16px 24px;
   font-size: 0.85rem;
   color: #9ca3af;
-  border-bottom: 1px solid #1e2530;
+  border-bottom: 1px solid #9ca3af;
   background: #0d1017;
 }
 .result-level { font-weight: 700; }
@@ -322,7 +309,7 @@ async function handleSubmit() {
 .atk-rank {
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.7rem;
-  color: #374151;
+  color: #d4d8de;
   width: 24px;
 }
 .atk-name {
@@ -334,7 +321,7 @@ async function handleSubmit() {
 .atk-bar-wrap {
   flex: 1;
   height: 6px;
-  background: #1e2530;
+  background: #9ca3af;
   border-radius: 3px;
   overflow: hidden;
 }
@@ -345,14 +332,78 @@ async function handleSubmit() {
   transition: width 0.6s ease;
 }
 .atk-acc { color: #9ca3af; font-size: 0.8rem; width: 140px; text-align: right; }
-.atk-rate { color: #6b7280; font-size: 0.78rem; width: 140px; text-align: right; }
+.atk-rate { color: #d4d8de; font-size: 0.78rem; width: 140px; text-align: right; }
+
+
+.section-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  color: #d4d8de;
+  text-transform: uppercase;
+  padding: 12px 24px 4px;
+  border-top: 1px solid #9ca3af;
+}
+
+.atk-drop { color: #f43f5e; font-size: 0.78rem; width: 100px; text-align: right; }
+
+.ranking-list { padding: 8px 24px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.rank-medal {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  width: 24px;
+  text-align: center;
+}
+.medal-1 { color: #f59e0b; }
+.medal-2 { color: #9ca3af; }
+.medal-3 { color: #a16207; }
+.rank-medal:not(.medal-1):not(.medal-2):not(.medal-3) { color: #d4d8de; }
+
+.rank-name {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem;
+  color: #e8eaed;
+  width: 100px;
+}
+
+.rank-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: #9ca3af;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.rank-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #06b6d4, #f59e0b);
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+.rank-rate {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  width: 56px;
+  text-align: right;
+}
+
 
 .result-score {
   padding: 16px 24px;
-  border-top: 1px solid #1e2530;
+  border-top: 1px solid #9ca3af;
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.82rem;
-  color: #6b7280;
+  color: #d4d8de;
 }
 .result-score strong { color: #06b6d4; font-size: 1rem; }
 
