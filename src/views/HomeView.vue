@@ -153,7 +153,7 @@
           <div class="sec-rule"></div>
         </div>
         <h2 class="sec-title">应用场景</h2>
-        <p class="sec-subtitle">广泛适用于军事、工业、城市等无人机视觉部署场景</p>
+        <p class="sec-subtitle">从军事侦察到自动驾驶，本系统为多领域 AI 部署提供全方位安全护航</p>
       </div>
 
       <div class="scenario-grid">
@@ -162,9 +162,72 @@
             <span class="sc-icon" :style="{ color: s.color }">{{ s.icon }}</span>
             <span class="sc-tag">{{ s.tag }}</span>
           </div>
-          <h3 class="sc-title">{{ s.title }}</h3>
-          <p class="sc-desc">{{ s.desc }}</p>
+          
+          <div class="sc-main">
+            <h3 class="sc-title">{{ s.title }}</h3>
+            <p class="sc-desc">{{ s.desc }}</p>
+          </div>
+
+          <div class="sc-info-grid">
+            <div class="sc-info-box">
+              <span class="sib-label">技术挑战</span>
+              <ul class="sib-list">
+                <li v-for="c in s.challenges" :key="c">{{ c }}</li>
+              </ul>
+            </div>
+            <div class="sc-info-box">
+              <span class="sib-label">安全风险</span>
+              <ul class="sib-list">
+                <li v-for="r in s.risks" :key="r">{{ r }}</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="sc-footer">
+            <div class="sc-role">
+              <span class="scr-label">系统作用：</span>
+              <span class="scr-val">{{ s.role }}</span>
+            </div>
+            <div class="sc-value">
+              <span class="scv-label">应用价值：</span>
+              <span class="scv-val">{{ s.value }}</span>
+            </div>
+          </div>
+
           <div class="sc-bar" :style="{ background: `linear-gradient(90deg, ${s.color}, transparent)` }"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 总体价值总结 ── -->
+    <section class="section summary-sec">
+      <div class="summary-card">
+        <div class="summary-bg-dots"></div>
+        <div class="summary-content">
+          <div class="summary-header">
+            <h2 class="summary-title">核心意义</h2>
+            <div class="summary-divider"></div>
+          </div>
+          <p class="summary-text">
+            本系统面向多个实际应用场景，从<strong>单模型评测、多攻击分析到综合可视化与模型对比</strong>，构建了一套完整的鲁棒性评测体系。
+          </p>
+          <div class="summary-goals">
+            <div class="goal-item">
+              <span class="goal-icon">↑</span>
+              <span class="goal-label">从“功能验证”到“安全评估”的升级</span>
+            </div>
+            <div class="goal-item">
+              <span class="goal-icon">⇄</span>
+              <span class="goal-label">从“单一测试”到“系统分析”的转变</span>
+            </div>
+            <div class="goal-item">
+              <span class="goal-icon">↯</span>
+              <span class="goal-label">从“模型效果”到“模型可靠性”的深入</span>
+            </div>
+          </div>
+          <div class="summary-footer">
+            让 AI 模型不仅“能用”，更<strong>“可靠、安全、可落地”</strong>
+          </div>
         </div>
       </div>
     </section>
@@ -237,14 +300,38 @@ const features = [
 ]
 
 const scenarios = [
-  { icon: '◉', tag: 'DEFENSE',   color: '#f59e0b', title: '军事侦察',
-    desc: '评估无人机视觉系统在对抗干扰下的目标识别鲁棒性，为实战部署提供量化安全依据。' },
-  { icon: '◎', tag: 'LOGISTICS', color: '#06b6d4', title: '物流配送',
-    desc: '验证低空飞行器在复杂光线与遮挡场景下的检测稳定性，降低配送失误风险。' },
-  { icon: '◈', tag: 'SECURITY',  color: '#a78bfa', title: '边境巡逻',
-    desc: '测试极端环境下抵抗对抗样本攻击的能力边界，强化安全系统的可靠性与健壮性。' },
-  { icon: '⬡', tag: 'URBAN',     color: '#f43f5e', title: '城市监测',
-    desc: '分析复杂城市背景下模型的误分类风险，为系统加固提供精确改进方向与量化报告。' },
+  { 
+    icon: '◉', tag: 'MILITARY', color: '#f59e0b', title: '军事侦察',
+    desc: '承担前沿侦察、战场监视等关键任务，深度依赖视觉模型识别目标。',
+    challenges: ['光照剧烈变化', '目标伪装与欺骗', '毫秒级实时响应'],
+    risks: ['对抗攻击导致识别错误', '微小扰动引发模型误判'],
+    role: '系统性评估模型在极端对抗环境下的稳定性与弱点。',
+    value: '为军事系统提供安全性验证，支撑高可靠 AI 部署。'
+  },
+  { 
+    icon: '◎', tag: 'LOGISTICS', color: '#06b6d4', title: '物流配送',
+    desc: '在城市末端物流中，依靠视觉完成路径识别、投递点定位等。',
+    challenges: ['高楼遮挡与信号波动', '动态行人/车辆干扰', '降落点识别高度依赖'],
+    risks: ['对抗扰动导致路径规划错误', '投递点识别失败'],
+    role: '分析模型在不同攻击强度下的路径识别与避障能力。',
+    value: '提高配送任务成功率，降低复杂环境下的飞行风险。'
+  },
+  { 
+    icon: '◈', tag: 'AUTONOMOUS', color: '#a78bfa', title: '车载自动驾驶',
+    desc: '核心的安全关键系统，处理行人识别、交通标志及障碍物检测。',
+    challenges: ['全天候多场景适应', '极高精度与实时性', '长尾极端工况覆盖'],
+    risks: ['交通标志识别错误', '行人检测失败导致安全事故'],
+    role: '系统测试模型在对抗条件下的稳定性及对决策的影响。',
+    value: '提升系统可靠性，为模型优化与安全认证提供量化依据。'
+  },
+  { 
+    icon: '⬡', tag: 'SECURITY', color: '#f43f5e', title: '园区安防',
+    desc: '应用于智慧园区监控与边境巡逻，实现实时监控与异常行为分析。',
+    challenges: ['长时间稳定运行', '复杂背景下的异常识别', '昼夜光影剧烈变化'],
+    risks: ['恶意者利用对抗样本绕过检测', '误判导致漏检/误报'],
+    role: '检测模型在对抗干扰下的稳定性，评估系统真实安全性。',
+    value: '增强抗干扰能力，降低漏报风险，提升监控系统可信度。'
+  },
 ]
 </script>
 
@@ -583,54 +670,183 @@ const scenarios = [
 
 .scenario-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(2, 1fr); /* 改为 2 列 */
+  gap: 24px;
 }
 
 .sc-card {
   background: #0d1017;
   border: 1px solid #1e2530;
   border-radius: 4px;
-  padding: 30px 26px 24px;
+  padding: 32px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  transition: border-color 0.25s, transform 0.25s;
+  gap: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
   overflow: hidden;
 }
-.sc-card:hover { border-color: #374151; transform: translateY(-4px); }
-.sc-card:hover .sc-bar { opacity: 1; }
+.sc-card:hover { 
+  border-color: #374151; 
+  transform: translateY(-6px);
+  background: #11141b;
+  box-shadow: 0 12px 32px -12px rgba(0,0,0,0.5);
+}
+.sc-card:hover .sc-bar { opacity: 1; height: 3px; }
 
-.sc-top { display: flex; align-items: center; justify-content: space-between; }
-.sc-icon { font-size: 2rem; line-height: 1; }
+.sc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.sc-icon { font-size: 2.4rem; line-height: 1; }
 .sc-tag {
   font-family: 'Share Tech Mono', monospace;
-  font-size: 0.56rem;
+  font-size: 0.6rem;
   letter-spacing: 0.14em;
-  color: #374151;
+  color: #4b5563;
   border: 1px solid #1e2530;
-  padding: 3px 8px;
-}
-.sc-title { font-size: 1.05rem; font-weight: 700; color: #e8eaed; margin: 0; }
-.sc-desc { font-size: 0.82rem; color: #6b7280; line-height: 1.75; margin: 0; flex: 1; }
-.sc-bar {
-  height: 2px;
-  border-radius: 1px;
-  opacity: 0;
-  transition: opacity 0.3s;
+  padding: 4px 10px;
+  background: rgba(255,255,255,0.02);
 }
 
+.sc-main { display: flex; flex-direction: column; gap: 8px; }
+.sc-title { font-size: 1.3rem; font-weight: 700; color: #f0f2f5; margin: 0; }
+.sc-desc { font-size: 0.9rem; color: #9ca3af; line-height: 1.6; margin: 0; }
+
+.sc-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 20px 0;
+  border-top: 1px solid #1e2530;
+  border-bottom: 1px solid #1e2530;
+}
+.sc-info-box { display: flex; flex-direction: column; gap: 10px; }
+.sib-label {
+  font-size: 0.7rem;
+  color: #4b5563;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.sib-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sib-list li {
+  font-size: 0.8rem;
+  color: #6b7280;
+  padding-left: 12px;
+  position: relative;
+}
+.sib-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 4px;
+  height: 4px;
+  background: #374151;
+  border-radius: 50%;
+}
+
+.sc-footer { display: flex; flex-direction: column; gap: 12px; }
+.sc-role, .sc-value { font-size: 0.82rem; line-height: 1.5; }
+.scr-label, .scv-label { color: #4b5563; font-weight: 700; }
+.scr-val, .scv-val { color: #8a8f98; }
+
+.sc-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  opacity: 0.4;
+  transition: all 0.3s;
+}
+
+/* ══════════════════ SUMMARY ══════════════════ */
+.summary-sec {
+  padding-bottom: 140px;
+  background: #080a0d;
+}
+.summary-card {
+  background: linear-gradient(145deg, #0d1017, #0a0c0f);
+  border: 1px solid #1e2530;
+  border-radius: 4px;
+  padding: 64px;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+.summary-bg-dots {
+  position: absolute; inset: 0;
+  background-image: radial-gradient(#1e2530 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.3;
+}
+.summary-content { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; }
+
+.summary-header { margin-bottom: 32px; }
+.summary-title {
+  font-size: 1.8rem;
+  color: #f0f2f5;
+  margin-bottom: 16px;
+  letter-spacing: 0.1em;
+}
+.summary-divider {
+  width: 60px; height: 2px; background: #f59e0b; margin: 0 auto;
+}
+
+.summary-text {
+  font-size: 1.1rem;
+  color: #9ca3af;
+  line-height: 1.8;
+  margin-bottom: 48px;
+}
+.summary-text strong { color: #f0f2f5; }
+
+.summary-goals {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 56px;
+}
+.goal-item {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid #1e2530;
+  padding: 24px 16px;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+.goal-icon { font-size: 1.5rem; color: #f59e0b; }
+.goal-label { font-size: 0.85rem; color: #6b7280; line-height: 1.5; }
+
+.summary-footer {
+  font-size: 1.2rem;
+  color: #6b7280;
+}
+.summary-footer strong { color: #f59e0b; font-weight: 700; margin-left: 8px; }
+
 /* 响应式 */
-@media (max-width: 1200px) { .scenario-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 1200px) { 
+  .scenario-grid { grid-template-columns: 1fr; }
+  .summary-goals { grid-template-columns: 1fr; }
+}
 @media (max-width: 900px) {
   .feature-grid { grid-template-columns: 1fr; }
   .hero-content { max-width: 100%; padding: 40px 6%; }
   .radar { opacity: 0.25; right: -60px; }
   .section { padding: 72px 6%; }
+  .summary-card { padding: 40px 24px; }
 }
 @media (max-width: 600px) {
-  .scenario-grid { grid-template-columns: 1fr; }
   .hero-metrics { flex-wrap: wrap; gap: 24px; }
   .metric { border-right: none; padding-right: 0; margin-right: 0; }
+  .sc-info-grid { grid-template-columns: 1fr; }
 }
 </style>

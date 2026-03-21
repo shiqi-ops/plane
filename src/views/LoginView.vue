@@ -1,86 +1,180 @@
 <template>
   <div class="page">
-    <div class="bg-grid"></div>
+    <!-- 背景层 -->
+    <div class="bg-layer">
+      <div class="bg-grid"></div>
+      <div class="bg-radar"></div>
+      <div class="bg-glow"></div>
+      <div class="scan-line"></div>
+    </div>
 
-    <div class="login-wrap">
-      <div class="brand">
-        <span class="brand-icon">⬡</span>
-        <span class="brand-name">DRONE<em>EVAL</em></span>
-      </div>
-
-      <div class="login-card">
-        <div class="card-header">
-          <!-- Tab 切换 -->
-          <div class="tabs">
-            <button
-              class="tab"
-              :class="{ active: mode === 'login' }"
-              @click="switchMode('login')"
-            >登录</button>
-            <button
-              class="tab"
-              :class="{ active: mode === 'register' }"
-              @click="switchMode('register')"
-            >注册</button>
-          </div>
-          <p class="card-sub">无人机视觉模型鲁棒性评测平台</p>
-        </div>
-
-        <div class="form">
-          <div class="field">
-            <label class="field-label">用户名</label>
-            <input
-              v-model="form.username"
-              class="field-input"
-              placeholder="请输入用户名"
-              @keyup.enter="handleSubmit"
-            />
-          </div>
-
-          <!-- 注册时额外显示 -->
-          <div class="field" v-if="mode === 'register'">
-            <label class="field-label">邮箱（选填）</label>
-            <input
-              v-model="form.email"
-              class="field-input"
-              placeholder="请输入邮箱"
-              @keyup.enter="handleSubmit"
-            />
-          </div>
-
-          <div class="field">
-            <label class="field-label">密码</label>
-            <input
-              v-model="form.password"
-              type="password"
-              class="field-input"
-              placeholder="请输入密码"
-              @keyup.enter="handleSubmit"
-            />
-          </div>
-
-          <div class="field" v-if="mode === 'register'">
-            <label class="field-label">确认密码</label>
-            <input
-              v-model="form.confirmPassword"
-              type="password"
-              class="field-input"
-              placeholder="再次输入密码"
-              @keyup.enter="handleSubmit"
-            />
-          </div>
-
-          <p class="error" v-if="error">⚠ {{ error }}</p>
-          <p class="success" v-if="successMsg">✓ {{ successMsg }}</p>
-
-          <button class="login-btn" @click="handleSubmit" :disabled="loading">
-            <span v-if="loading" class="loading-dot"></span>
-            {{ loading ? '请稍候...' : mode === 'login' ? '登 录' : '注 册' }}
-          </button>
+    <div class="login-container">
+      <!-- 左侧装饰性元素 -->
+      <div class="side-deco left">
+        <div class="deco-line"></div>
+        <div class="deco-data">
+          <span>SYSTEM_STATUS: OK</span>
+          <span>ENCRYPTION: AES-256</span>
+          <span>LATENCY: 12ms</span>
         </div>
       </div>
 
-      <p class="footer-text">DRONE ROBUSTNESS PLATFORM · v1.0</p>
+      <div class="login-wrap">
+        <!-- 品牌标识 -->
+        <div class="brand">
+          <div class="brand-logo">
+            <span class="logo-hex">⬡</span>
+            <div class="logo-rings">
+              <span></span><span></span>
+            </div>
+          </div>
+          <h1 class="brand-name">DRONE<em>EVAL</em></h1>
+          <p class="brand-sub">无人机视觉模型鲁棒性评测平台</p>
+        </div>
+
+        <!-- 登录卡片 -->
+        <div class="login-card">
+          <!-- 装饰角 -->
+          <div class="card-corner tl"></div>
+          <div class="card-corner tr"></div>
+          <div class="card-corner bl"></div>
+          <div class="card-corner br"></div>
+
+          <div class="card-header">
+            <div class="tabs">
+              <button
+                class="tab"
+                :class="{ active: mode === 'login' }"
+                @click="switchMode('login')"
+              >
+                <span class="tab-text">访问控制</span>
+                <span class="tab-sub">LOGIN</span>
+              </button>
+              <button
+                class="tab"
+                :class="{ active: mode === 'register' }"
+                @click="switchMode('register')"
+              >
+                <span class="tab-text">建立档案</span>
+                <span class="tab-sub">REGISTER</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-container">
+            <div class="form-group">
+              <div class="field">
+                <div class="field-header">
+                  <span class="field-label">识别码</span>
+                  <span class="field-id">#USER_ID</span>
+                </div>
+                <div class="input-wrapper">
+                  <input
+                    v-model="form.username"
+                    class="field-input"
+                    placeholder="请输入用户名"
+                    @keyup.enter="handleSubmit"
+                  />
+                  <div class="input-focus-line"></div>
+                </div>
+              </div>
+
+              <!-- 注册时额外显示 -->
+              <transition name="fade">
+                <div class="field" v-if="mode === 'register'">
+                  <div class="field-header">
+                    <span class="field-label">通信信道</span>
+                    <span class="field-id">#EMAIL</span>
+                  </div>
+                  <div class="input-wrapper">
+                    <input
+                      v-model="form.email"
+                      class="field-input"
+                      placeholder="请输入邮箱"
+                      @keyup.enter="handleSubmit"
+                    />
+                    <div class="input-focus-line"></div>
+                  </div>
+                </div>
+              </transition>
+
+              <div class="field">
+                <div class="field-header">
+                  <span class="field-label">访问密钥</span>
+                  <span class="field-id">#ACCESS_KEY</span>
+                </div>
+                <div class="input-wrapper">
+                  <input
+                    v-model="form.password"
+                    type="password"
+                    class="field-input"
+                    placeholder="请输入密码"
+                    @keyup.enter="handleSubmit"
+                  />
+                  <div class="input-focus-line"></div>
+                </div>
+              </div>
+
+              <transition name="fade">
+                <div class="field" v-if="mode === 'register'">
+                  <div class="field-header">
+                    <span class="field-label">密钥确认</span>
+                    <span class="field-id">#VERIFY</span>
+                  </div>
+                  <div class="input-wrapper">
+                    <input
+                      v-model="form.confirmPassword"
+                      type="password"
+                      class="field-input"
+                      placeholder="再次输入密码"
+                      @keyup.enter="handleSubmit"
+                    />
+                    <div class="input-focus-line"></div>
+                  </div>
+                </div>
+              </transition>
+            </div>
+
+            <div class="form-footer">
+              <p class="error" v-if="error">
+                <span class="error-icon">!</span> {{ error }}
+              </p>
+              <p class="success" v-if="successMsg">
+                <span class="success-icon">✓</span> {{ successMsg }}
+              </p>
+
+              <button class="login-btn" @click="handleSubmit" :disabled="loading">
+                <div class="btn-bg"></div>
+                <span v-if="loading" class="loading-spinner"></span>
+                <span class="btn-text">
+                  {{ loading ? '同步中...' : mode === 'login' ? '执行登录指令' : '建立访问权限' }}
+                </span>
+                <span class="btn-arrow">→</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-info">
+          <div class="info-item">
+            <span class="info-label">PROTOCOL</span>
+            <span class="info-val">DRONE-V1.0</span>
+          </div>
+          <div class="info-divider"></div>
+          <div class="info-item">
+            <span class="info-label">SEC_LEVEL</span>
+            <span class="info-val">HIGH</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧装饰性元素 -->
+      <div class="side-deco right">
+        <div class="deco-hex-grid">
+          <span v-for="i in 6" :key="i">⬡</span>
+        </div>
+        <div class="deco-line"></div>
+      </div>
     </div>
   </div>
 </template>
@@ -192,195 +286,304 @@ async function handleRegister() {
 
 .page {
   min-height: 100vh;
-  background: #0a0c0f;
+  background: #05070a;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Noto Sans SC', sans-serif;
   position: relative;
   overflow: hidden;
+  color: #d4d8de;
 }
+
+/* ── 背景层 ── */
+.bg-layer { position: absolute; inset: 0; pointer-events: none; }
 
 .bg-grid {
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   background-image:
-    linear-gradient(#9ca3af 1px, transparent 1px),
-    linear-gradient(90deg, #9ca3af 1px, transparent 1px);
-  background-size: 48px 48px;
-  opacity: 0.3;
-  pointer-events: none;
+    linear-gradient(rgba(245, 158, 11, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245, 158, 11, 0.05) 1px, transparent 1px);
+  background-size: 60px 60px;
 }
 
-.page::after {
-  content: '';
+.bg-radar {
   position: absolute;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, transparent 70%);
-  pointer-events: none;
+  top: 50%; left: 50%;
+  width: 800px; height: 800px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.03) 0%, transparent 70%);
+  border: 1px solid rgba(245, 158, 11, 0.05);
+  border-radius: 50%;
+}
+
+.bg-glow {
+  position: absolute;
+  top: -10%; right: -10%;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.05) 0%, transparent 70%);
+  filter: blur(80px);
+}
+
+.scan-line {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.2), transparent);
+  animation: scan 8s linear infinite;
+  z-index: 2;
+}
+@keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
+
+/* ── 容器布局 ── */
+.login-container {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 60px;
+  width: 100%;
+  max-width: 1100px;
+  padding: 40px;
 }
 
 .login-wrap {
-  position: relative;
-  z-index: 1;
+  flex: 1;
+  max-width: 440px;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 32px;
-  width: 100%;
-  max-width: 420px;
-  padding: 24px;
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 1.2rem;
-  letter-spacing: 0.2em;
-  color: #e8eaed;
-}
-.brand-icon { color: #f59e0b; font-size: 1.6rem; }
-.brand-name em { font-style: normal; color: #f59e0b; }
-
-.login-card {
-  width: 100%;
-  background: #0d1017;
-  border: 1px solid #9ca3af;
-  border-top: 2px solid #f59e0b;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-/* ── Tab ── */
-.card-header {
-  padding: 24px 32px 20px;
-  border-bottom: 1px solid #9ca3af;
-}
-
-.tabs {
-  display: flex;
-  gap: 0;
-  margin-bottom: 14px;
-  border: 1px solid #9ca3af;
-  border-radius: 2px;
-  overflow: hidden;
-  width: fit-content;
-}
-
-.tab {
-  background: none;
-  border: none;
-  padding: 7px 24px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  color: #d4d8de;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.tab:first-child { border-right: 1px solid #9ca3af; }
-.tab.active {
-  background: #f59e0b;
-  color: #0a0c0f;
-  font-weight: 700;
-}
-.tab:not(.active):hover { color: #9ca3af; }
-
-.card-sub {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  color: #d4d8de;
-  margin: 0;
-}
-
-/* ── 表单 ── */
-.form {
-  padding: 28px 32px 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.field { display: flex; flex-direction: column; gap: 8px; }
-
-.field-label {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.15em;
-  color: #f59e0b;
-  text-transform: uppercase;
-}
-
-.field-input {
-  background: #080a0d;
-  border: 1px solid #9ca3af;
-  color: #e8eaed;
-  padding: 11px 16px;
-  font-family: 'Noto Sans SC', sans-serif;
-  font-size: 0.9rem;
-  border-radius: 2px;
-  outline: none;
-  transition: border 0.2s;
-  width: 100%;
-  box-sizing: border-box;
-}
-.field-input::placeholder { color: #d4d8de; }
-.field-input:focus { border-color: #f59e0b; }
-
-.error {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.75rem;
-  color: #f43f5e;
-  letter-spacing: 0.05em;
-  margin: 0;
-}
-
-.success {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.75rem;
-  color: #22c55e;
-  letter-spacing: 0.05em;
-  margin: 0;
-}
-
-.login-btn {
+/* ── 品牌 ── */
+.brand { text-align: center; }
+.brand-logo {
+  position: relative;
+  width: 64px; height: 64px;
+  margin: 0 auto 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  width: 100%;
-  background: #f59e0b;
-  color: #0a0c0f;
+}
+.logo-hex {
+  font-size: 2.4rem;
+  color: #f59e0b;
+  z-index: 2;
+}
+.logo-rings span {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 50%;
+  animation: ring-pulse 4s infinite;
+}
+.logo-rings span:last-child { animation-delay: 2s; }
+@keyframes ring-pulse { 0% { transform: scale(0.8); opacity: 0; } 50% { opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+
+.brand-name {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 2rem;
+  letter-spacing: 0.25em;
+  margin: 0 0 8px;
+  color: #f0f2f5;
+}
+.brand-name em { font-style: normal; color: #f59e0b; text-shadow: 0 0 15px rgba(245,158,11,0.3); }
+.brand-sub { font-size: 0.85rem; color: #6b7280; letter-spacing: 0.1em; margin: 0; }
+
+/* ── 侧边装饰 ── */
+.side-deco {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  opacity: 0.4;
+}
+.deco-line { width: 1px; height: 100px; background: linear-gradient(to bottom, transparent, #f59e0b, transparent); }
+.deco-data {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  color: #f59e0b;
+  letter-spacing: 0.1em;
+}
+.deco-hex-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  font-size: 1.2rem;
+  color: #f59e0b;
+}
+
+/* ── 登录卡片 ── */
+.login-card {
+  position: relative;
+  background: rgba(13, 16, 23, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(156, 163, 175, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.card-corner {
+  position: absolute;
+  width: 12px; height: 12px;
+  border-color: #f59e0b;
+  border-style: solid;
+  z-index: 5;
+}
+.tl { top: 0; left: 0; border-width: 2px 0 0 2px; }
+.tr { top: 0; right: 0; border-width: 2px 2px 0 0; }
+.bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; }
+.br { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+
+.card-header { border-bottom: 1px solid rgba(156, 163, 175, 0.1); }
+.tabs { display: flex; }
+.tab {
+  flex: 1;
+  background: none;
   border: none;
-  padding: 13px;
+  padding: 20px 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.3s;
+  position: relative;
+}
+.tab-text { font-size: 0.95rem; color: #9ca3af; transition: color 0.3s; }
+.tab-sub { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; color: #4b5563; letter-spacing: 0.1em; }
+
+.tab.active .tab-text { color: #f59e0b; font-weight: 700; }
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: #f59e0b;
+  box-shadow: 0 0 10px rgba(245,158,11,0.5);
+}
+.tab:not(.active):hover .tab-text { color: #d4d8de; }
+
+/* ── 表单 ── */
+.form-container { padding: 32px; }
+.form-group { display: flex; flex-direction: column; gap: 24px; }
+
+.field-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.field-label { font-size: 0.75rem; color: #f59e0b; font-weight: 700; letter-spacing: 0.05em; }
+.field-id { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; color: #4b5563; }
+
+.input-wrapper { position: relative; }
+.field-input {
+  width: 100%;
+  background: rgba(8, 10, 13, 0.6);
+  border: 1px solid rgba(156, 163, 175, 0.3);
+  padding: 12px 16px;
+  color: #e8eaed;
+  font-size: 0.9rem;
+  border-radius: 2px;
+  outline: none;
+  transition: all 0.3s;
+}
+.field-input::placeholder { color: #374151; }
+.field-input:focus { border-color: rgba(245, 158, 11, 0.5); background: rgba(8, 10, 13, 0.8); }
+
+.input-focus-line {
+  position: absolute;
+  bottom: 0; left: 50%;
+  width: 0; height: 1px;
+  background: #f59e0b;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.field-input:focus + .input-focus-line { width: 100%; left: 0; }
+
+/* ── 按钮 ── */
+.form-footer { margin-top: 32px; display: flex; flex-direction: column; gap: 20px; }
+
+.login-btn {
+  position: relative;
+  width: 100%;
+  padding: 14px;
+  background: none;
+  border: 1px solid #f59e0b;
+  color: #f59e0b;
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.9rem;
-  letter-spacing: 0.15em;
   font-weight: 700;
+  letter-spacing: 0.2em;
   cursor: pointer;
-  border-radius: 2px;
-  margin-top: 4px;
-  transition: all 0.2s;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: all 0.3s;
 }
-.login-btn:hover:not(:disabled) { background: #fbbf24; }
-.login-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-bg {
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: #f59e0b;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: -1;
+}
+.login-btn:hover:not(:disabled) { color: #0a0c0f; }
+.login-btn:hover:not(:disabled) .btn-bg { left: 0; }
+.login-btn:disabled { opacity: 0.4; cursor: not-allowed; border-color: #374151; color: #374151; }
 
-.loading-dot {
-  width: 8px; height: 8px;
+.btn-arrow { transition: transform 0.3s; }
+.login-btn:hover .btn-arrow { transform: translateX(5px); }
+
+.loading-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(245, 158, 11, 0.3);
+  border-top-color: currentColor;
   border-radius: 50%;
-  background: #0a0c0f;
-  animation: pulse 1s infinite;
+  animation: spin 0.8s linear infinite;
 }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.footer-text {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.65rem;
-  letter-spacing: 0.15em;
-  color: #9ca3af;
+/* ── 状态提示 ── */
+.error, .success {
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 2px;
+  animation: slideIn 0.3s ease-out;
+}
+.error { color: #f43f5e; background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.2); }
+.success { color: #10b981; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); }
+
+@keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── 底部信息 ── */
+.footer-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+}
+.info-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.info-label { font-family: 'Share Tech Mono', monospace; font-size: 0.55rem; color: #4b5563; }
+.info-val { font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; color: #9ca3af; }
+.info-divider { width: 1px; height: 20px; background: rgba(156, 163, 175, 0.1); }
+
+/* ── 动画 ── */
+.fade-enter-active, .fade-leave-active { transition: all 0.3s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(-10px); }
+
+/* ── 响应式 ── */
+@media (max-width: 900px) {
+  .side-deco { display: none; }
+  .login-container { justify-content: center; padding: 20px; }
 }
 </style>
