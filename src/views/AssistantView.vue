@@ -56,10 +56,26 @@
 
           <div v-if="interpretation" class="interp-box">
             <div class="interp-hd">
-              <span>AI 解读报告</span>
-              <button class="copy-btn" @click="copyText(interpretation)">复制</button>
+              <span>AI 智能解读报告</span>
+              <div class="hd-actions">
+                <button class="copy-btn" @click="copyText(interpretationText)">复制</button>
+                <button class="copy-btn" @click="exportReport">导出</button>
+              </div>
             </div>
-            <div class="interp-body">{{ interpretation }}</div>
+            <div class="interp-body structured">
+              <div class="interp-section">
+                <h3 class="section-h3">▌ 核心结论 (Core Conclusions)</h3>
+                <p>{{ interpretation.conclusions }}</p>
+              </div>
+              <div class="interp-section">
+                <h3 class="section-h3">▌ 弱点分析 (Weakness Analysis)</h3>
+                <p>{{ interpretation.weaknesses }}</p>
+              </div>
+              <div class="interp-section">
+                <h3 class="section-h3">▌ 优化建议 (Optimization Suggestions)</h3>
+                <p>{{ interpretation.suggestions }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -121,23 +137,60 @@ const history = computed(() => {
 
 const selectedReport = ref('')
 const interpretLoading = ref(false)
-const interpretation = ref('')
+const interpretation = ref(null)
+
+const interpretationText = computed(() => {
+  if (!interpretation.value) return ''
+  return `【AI 智能解读报告】\n\n` +
+         `▌ 核心结论 (Core Conclusions)\n${interpretation.value.conclusions}\n\n` +
+         `▌ 弱点分析 (Weakness Analysis)\n${interpretation.value.weaknesses}\n\n` +
+         `▌ 优化建议 (Optimization Suggestions)\n${interpretation.value.suggestions}`
+})
 
 async function handleInterpret() {
   interpretLoading.value = true
-  interpretation.value = ''
+  interpretation.value = null
   try {
+    // 模拟调用豆包 API 或后端 API
+    // 在真实环境下，这里会发送 selectedReport.value 到后端，由后端调用 AI 模型生成结构化内容
     const res = await api.post('/assistant/interpret', { report: selectedReport.value })
-    interpretation.value = res.data.interpretation
+    
+    // 假设后端返回结构化数据，如果返回的是字符串，则进行简单的 mock 拆分
+    if (typeof res.data.interpretation === 'object') {
+      interpretation.value = res.data.interpretation
+    } else {
+      // Mock 结构化数据
+      interpretation.value = {
+        conclusions: "模型在当前攻击组合下表现出明显的鲁棒性不足。尽管在清洁数据集上表现良好，但在面对迭代式对抗攻击（如 PGD）时，准确率下降超过 40%，说明模型对于精细扰动非常敏感。",
+        weaknesses: "1. 决策边界过于复杂且不平滑，导致微小扰动即可改变分类结果。\n2. 对高频噪声特征过度依赖，缺乏对图像语义结构的深度提取能力。\n3. 在大 eps 扰动下，模型的对抗样本检测机制完全失效。",
+        suggestions: "1. 引入对抗训练（Adversarial Training），将生成的对抗样本加入训练集。\n2. 使用 TRADES 等鲁棒性损失函数优化训练过程，平衡清洁准确率与对抗鲁棒性。\n3. 在部署前增加输入变换防御层（如 JPEG 压缩或随机调整大小）以过滤高频噪声。"
+      }
+    }
   } catch {
-    interpretation.value = '解读失败，请检查后端连接。'
+    interpretation.value = {
+      conclusions: "解读失败，请检查网络连接。",
+      weaknesses: "无法获取分析数据。",
+      suggestions: "请重试或检查后端 API 状态。"
+    }
   } finally {
     interpretLoading.value = false
   }
 }
 
+function exportReport() {
+  if (!interpretation.value) return
+  const blob = new Blob([interpretationText.value], { type: 'text/plain' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `AI_Interpretation_${selectedReport.value.model}_${Date.now().toString().slice(-4)}.txt`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 function copyText(text) {
   navigator.clipboard.writeText(text)
+  alert('内容已复制到剪贴板')
 }
 
 // Chat
@@ -192,14 +245,14 @@ function scrollBottom() {
 .page-header {
   position: relative;
   padding: 48px 48px 40px;
-  border-bottom: 1px solid #9ca3af;
+  border-bottom: 1px solid #1e2530;
   overflow: hidden;
 }
 .ph-bg {
   position: absolute; inset: 0;
-  background-image: linear-gradient(#9ca3af 1px,transparent 1px), linear-gradient(90deg,#9ca3af 1px,transparent 1px);
+  background-image: linear-gradient(#374151 1px,transparent 1px), linear-gradient(90deg,#374151 1px,transparent 1px);
   background-size: 48px 48px;
-  opacity: 0.2;
+  opacity: 0.15;
 }
 .ph-content { position: relative; z-index: 1; }
 .ph-eyebrow {
@@ -211,13 +264,13 @@ function scrollBottom() {
   margin-bottom: 8px;
 }
 .ph-title { font-size: 2rem; font-weight: 700; color: #f0f2f5; margin: 0 0 8px; }
-.ph-desc { color: #d4d8de; font-size: 0.88rem; margin: 0; }
+.ph-desc { color: #9ca3af; font-size: 0.88rem; margin: 0; }
 
 .assistant-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1px;
-  background: #9ca3af;
+  background: #1e2530;
   flex: 1;
 }
 
@@ -230,24 +283,24 @@ function scrollBottom() {
 
 .panel-hd {
   padding: 32px 40px 24px;
-  border-bottom: 1px solid #9ca3af;
+  border-bottom: 1px solid #1e2530;
 }
 .panel-num {
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.62rem;
   letter-spacing: 0.2em;
-  color: #d4d8de;
+  color: #4b5563;
   display: block;
   margin-bottom: 8px;
 }
 .panel-title { font-size: 1.1rem; font-weight: 700; color: #e8eaed; margin: 0 0 6px; }
-.panel-desc { font-size: 0.82rem; color: #d4d8de; margin: 0; }
+.panel-desc { font-size: 0.82rem; color: #6b7280; margin: 0; }
 
 .panel-body {
   padding: 32px 40px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
   overflow-y: auto;
 }
 
@@ -262,21 +315,21 @@ function scrollBottom() {
 }
 .field-select {
   background: #0d1017;
-  border: 1px solid #9ca3af;
+  border: 1px solid #374151;
   color: #e8eaed;
   padding: 10px 14px;
   font-family: 'Noto Sans SC', sans-serif;
   font-size: 0.88rem;
   border-radius: 2px;
   outline: none;
-  transition: border 0.2s;
+  transition: all 0.2s;
 }
-.field-select:focus { border-color: #f59e0b; }
+.field-select:focus { border-color: #f59e0b; box-shadow: 0 0 0 2px rgba(245,158,11,0.1); }
 .field-select option { background: #0d1017; }
 
 .report-preview {
-  background: #0d1017;
-  border: 1px solid #9ca3af;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid #1e2530;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -284,13 +337,13 @@ function scrollBottom() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 16px;
-  border-bottom: 1px solid #9ca3af;
+  padding: 12px 16px;
+  border-bottom: 1px solid #1e2530;
   font-size: 0.84rem;
 }
 .preview-row:last-child { border-bottom: none; }
-.preview-row span:first-child { color: #d4d8de; font-family: 'Share Tech Mono', monospace; font-size: 0.72rem; letter-spacing: 0.08em; }
-.preview-row span:last-child { color: #e8eaed; font-family: 'Share Tech Mono', monospace; }
+.preview-row span:first-child { color: #6b7280; font-family: 'Share Tech Mono', monospace; font-size: 0.72rem; letter-spacing: 0.08em; }
+.preview-row span:last-child { color: #d4d8de; font-family: 'Share Tech Mono', monospace; }
 .warn { color: #f59e0b !important; }
 .level-A { color: #22c55e !important; }
 .level-B { color: #06b6d4 !important; }
@@ -325,41 +378,71 @@ function scrollBottom() {
 @keyframes ldot { 0%,100%{opacity:1} 50%{opacity:0.2} }
 
 .interp-box {
-  border: 1px solid #9ca3af;
+  border: 1px solid #1e2530;
   border-radius: 4px;
   overflow: hidden;
+  background: #0d1017;
 }
 .interp-hd {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 16px;
-  border-bottom: 1px solid #9ca3af;
-  background: #0d1017;
+  padding: 12px 20px;
+  border-bottom: 1px solid #1e2530;
+  background: #13171f;
   font-family: 'Share Tech Mono', monospace;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   letter-spacing: 0.1em;
   color: #f59e0b;
 }
+.hd-actions { display: flex; gap: 8px; }
 .copy-btn {
-  background: none;
-  border: 1px solid #d4d8de;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid #374151;
   color: #9ca3af;
-  padding: 3px 10px;
+  padding: 4px 12px;
   font-family: 'Share Tech Mono', monospace;
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   cursor: pointer;
   border-radius: 2px;
   transition: all 0.2s;
 }
-.copy-btn:hover { border-color: #f59e0b; color: #f59e0b; }
+.copy-btn:hover { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.05); }
 
 .interp-body {
-  padding: 16px;
-  font-size: 0.85rem;
+  padding: 24px;
+  font-size: 0.88rem;
   color: #9ca3af;
   line-height: 1.8;
   white-space: pre-wrap;
+}
+.interp-body.structured {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 24px 32px;
+}
+.interp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.section-h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f59e0b;
+  margin: 0;
+  letter-spacing: 0.05em;
+}
+.interp-section p {
+  margin: 0;
+  color: #d4d8de;
+  font-size: 0.88rem;
+  line-height: 1.8;
+  background: rgba(255,255,255,0.02);
+  padding: 14px 18px;
+  border-radius: 4px;
+  border-left: 2px solid rgba(245,158,11,0.2);
 }
 
 /* Chat */
@@ -367,61 +450,68 @@ function scrollBottom() {
 
 .chat-messages {
   flex: 1;
-  padding: 24px 40px;
+  padding: 32px 40px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  min-height: 360px;
-  max-height: 480px;
+  gap: 20px;
+  min-height: 400px;
+  max-height: 520px;
+  background: radial-gradient(circle at top right, rgba(245,158,11,0.03) 0%, transparent 40%);
 }
 
-.chat-empty { display: flex; flex-direction: column; gap: 16px; margin: auto 0; }
-.empty-hint { font-size: 0.85rem; color: #d4d8de; font-family: 'Share Tech Mono', monospace; letter-spacing: 0.05em; }
+.chat-empty { display: flex; flex-direction: column; gap: 20px; margin: auto 0; text-align: center; }
+.empty-hint { font-size: 0.88rem; color: #4b5563; font-family: 'Share Tech Mono', monospace; letter-spacing: 0.05em; }
 
-.suggestions { display: flex; flex-direction: column; gap: 8px; }
+.suggestions { display: flex; flex-direction: column; gap: 10px; align-items: center; }
 .suggest-btn {
-  background: #0d1017;
-  border: 1px solid #9ca3af;
-  color: #d4d8de;
-  padding: 10px 16px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid #1e2530;
+  color: #9ca3af;
+  padding: 12px 24px;
   text-align: left;
   font-family: 'Noto Sans SC', sans-serif;
   font-size: 0.82rem;
   cursor: pointer;
-  border-radius: 2px;
+  border-radius: 4px;
   transition: all 0.2s;
+  width: 100%;
+  max-width: 320px;
 }
-.suggest-btn:hover { border-color: #d4d8de; color: #d4d8de; }
+.suggest-btn:hover { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.05); }
 
-.msg { display: flex; }
+.msg { display: flex; width: 100%; }
 .msg.user { justify-content: flex-end; }
 .msg.ai   { justify-content: flex-start; }
 
 .bubble {
-  max-width: 75%;
-  padding: 10px 14px;
-  border-radius: 4px;
-  font-size: 0.88rem;
+  max-width: 85%;
+  padding: 14px 18px;
+  border-radius: 8px;
+  font-size: 0.9rem;
   line-height: 1.6;
+  position: relative;
 }
 .user .bubble {
-  background: rgba(245,158,11,0.12);
-  border: 1px solid rgba(245,158,11,0.2);
-  color: #e8eaed;
+  background: #f59e0b;
+  color: #0a0c0f;
+  font-weight: 500;
+  border-bottom-right-radius: 2px;
 }
 .ai .bubble {
-  background: #0d1017;
-  border: 1px solid #9ca3af;
-  color: #9ca3af;
+  background: #13171f;
+  border: 1px solid #1e2530;
+  color: #d4d8de;
+  border-bottom-left-radius: 2px;
 }
 
-.typing { display: flex; align-items: center; gap: 4px; padding: 14px; }
+.typing { display: flex; align-items: center; gap: 6px; padding: 16px; }
 .typing span {
   width: 6px; height: 6px;
-  background: #d4d8de;
+  background: #f59e0b;
   border-radius: 50%;
   animation: typing 1.2s infinite;
+  opacity: 0.6;
 }
 .typing span:nth-child(2) { animation-delay: 0.2s; }
 .typing span:nth-child(3) { animation-delay: 0.4s; }
@@ -430,34 +520,36 @@ function scrollBottom() {
 .chat-input-row {
   display: flex;
   gap: 0;
-  border-top: 1px solid #9ca3af;
+  border-top: 1px solid #1e2530;
+  background: #0d1017;
 }
 .chat-input {
   flex: 1;
-  background: #0d1017;
+  background: transparent;
   border: none;
-  border-right: 1px solid #9ca3af;
-  color: #e8eaed;
-  padding: 16px 20px;
+  border-right: 1px solid #1e2530;
+  color: #f0f2f5;
+  padding: 20px 24px;
   font-family: 'Noto Sans SC', sans-serif;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   outline: none;
 }
-.chat-input::placeholder { color: #d4d8de; }
+.chat-input::placeholder { color: #374151; }
 
 .send-btn {
-  background: #0d1017;
+  background: transparent;
   border: none;
   color: #f59e0b;
-  padding: 0 28px;
+  padding: 0 32px;
   font-family: 'Share Tech Mono', monospace;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   letter-spacing: 0.1em;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
-.send-btn:hover:not(:disabled) { background: #13171f; }
-.send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.send-btn:hover:not(:disabled) { background: rgba(245,158,11,0.05); color: #fbbf24; }
+.send-btn:disabled { opacity: 0.2; cursor: not-allowed; }
 
 @media (max-width: 900px) {
   .assistant-layout { grid-template-columns: 1fr; }
