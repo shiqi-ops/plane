@@ -226,18 +226,26 @@
 
   <!-- 图片区 -->
   <template v-if="result.curve_path || result.compare_path">
-    <div class="report-section-title"><span>▌</span> 可视化图表</div>
+    <div class="report-section-title"><span>▌</span> 可视化图表分析</div>
     <div class="report-images">
+      <!-- 原始 vs 对抗样本 -->
+      <div class="img-block" v-if="result.compare_path">
+        <div class="img-label">原始图像 (Original) vs 对抗样本 (Adversarial)</div>
+        <div class="img-wrap">
+          <img :src="imgUrl(result.compare_path)" alt="对比图" class="result-img" />
+        </div>
+        <div class="img-desc highlight">
+          对比分析：左侧为原始输入图像，右侧为添加扰动（ε={{ result.eps }}）后的对抗样本。虽然视觉差异极小，但已成功诱导模型产生错误判断。
+        </div>
+      </div>
+      <!-- 鲁棒性性能曲线 -->
       <div class="img-block" v-if="result.curve_path">
-        <div class="img-label">鲁棒性曲线 Robustness Curve</div>
+        <div class="img-label">鲁棒性性能曲线 Robustness Performance Curve</div>
         <div class="img-wrap">
           <img :src="imgUrl(result.curve_path)" alt="鲁棒性曲线" class="result-img" />
         </div>
-      </div>
-      <div class="img-block" v-if="result.compare_path">
-        <div class="img-label">原始 vs 对抗样本</div>
-        <div class="img-wrap">
-          <img :src="imgUrl(result.compare_path)" alt="对比图" class="result-img" />
+        <div class="img-desc highlight">
+          曲线分析显示：随着扰动强度（eps）逐步提升，模型准确率呈现下降趋势，说明模型在强对抗环境下的鲁棒性表现不足，对抗强度越高，模型的预测偏差越明显。
         </div>
       </div>
     </div>
@@ -295,7 +303,7 @@ const form = ref({ model: '', attack: '', eps: 0.03 })
 const loading = ref(false)
 // const result = ref(null)
 const result = ref({
-  model: 'resnet18',
+  model: 'ResNet18',
   dataset: 'drone_dataset',
   attack: 'FGSM',
   eps: 0.03,
@@ -304,8 +312,8 @@ const result = ref({
   accuracy_drop: 0.4760,
   robust_score: 0.3265,
   robust_level: 'D',
-  curve_path: null,    // 暂时没图
-  compare_path: null,
+  curve_path: 'mock_curve.png',    // 模拟图片路径
+  compare_path: 'mock_compare.png',
 })
 function gradeDesc(level) {
   const map = {
@@ -914,6 +922,20 @@ async function handleSubmit() {
 .img-label { font-family: 'Share Tech Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em; color: #374151; text-transform: uppercase; }
 .img-wrap { background: #080a0d; border: 1px solid #1e2530; border-radius: 2px; overflow: hidden; min-height: 160px; display: flex; align-items: center; justify-content: center; }
 .result-img { width: 100%; height: auto; display: block; }
+
+.img-desc {
+  font-size: 0.75rem;
+  color: #6b7280;
+  line-height: 1.6;
+  padding: 8px 12px;
+  background: #0a0c0f;
+  border-radius: 2px;
+  border-left: 2px solid #374151;
+}
+.img-desc.highlight {
+  color: #9ca3af;
+  border-left-color: #f59e0b;
+}
 
 /* 结论 */
 .report-conclusion {

@@ -384,15 +384,15 @@ const combinations = [
 .bg-grid {
   position: absolute; inset: 0;
   background-image:
-    linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(245, 158, 11, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245, 158, 11, 0.05) 1px, transparent 1px);
   background-size: 50px 50px;
 }
 .bg-glow {
   position: absolute; top: 20%; left: 50%;
   width: 1000px; height: 1000px;
   transform: translateX(-50%);
-  background: radial-gradient(circle, rgba(6, 182, 212, 0.03) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.03) 0%, transparent 70%);
 }
 
 .content-wrap {
@@ -409,8 +409,8 @@ const combinations = [
   display: inline-block;
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.7rem;
-  color: #06b6d4;
-  border: 1px solid rgba(6, 182, 212, 0.3);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
   padding: 4px 12px;
   letter-spacing: 0.2em;
   margin-bottom: 16px;
@@ -429,29 +429,29 @@ const combinations = [
 
 /* ── 板块通用 ── */
 .section { margin-bottom: 100px; }
-.sec-header { margin-bottom: 40px; border-left: 4px solid #06b6d4; padding-left: 20px; }
+.sec-header { margin-bottom: 40px; border-left: 4px solid #f59e0b; padding-left: 20px; }
 .sec-title { font-size: 1.8rem; color: #f0f2f5; margin-bottom: 8px; }
 .sec-desc { font-size: 0.95rem; color: #6b7280; }
 
 .attack-category { margin-top: 48px; }
 .category-title {
   font-size: 1.1rem;
-  color: #06b6d4;
+  color: #f59e0b;
   font-family: 'Share Tech Mono', monospace;
   margin-bottom: 24px;
   display: flex;
   align-items: center;
   gap: 12px;
 }
-.category-title::after { content: ''; flex: 1; height: 1px; background: rgba(6, 182, 212, 0.1); }
+.category-title::after { content: ''; flex: 1; height: 1px; background: rgba(245, 158, 11, 0.1); }
 
 /* ── 手风琴布局 ── */
 .accordion-list {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  background: rgba(6, 182, 212, 0.1);
-  border: 1px solid rgba(6, 182, 212, 0.1);
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.1);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -469,10 +469,10 @@ const combinations = [
   cursor: pointer;
   transition: background 0.3s;
 }
-.accordion-header:hover { background: rgba(6, 182, 212, 0.05); }
+.accordion-header:hover { background: rgba(245, 158, 11, 0.05); }
 
 .ah-left { display: flex; align-items: center; gap: 20px; }
-.ah-icon { font-size: 1.4rem; color: #06b6d4; width: 24px; text-align: center; }
+.ah-icon { font-size: 1.4rem; color: #f59e0b; width: 24px; text-align: center; }
 .ah-title { font-size: 1.2rem; font-weight: 700; color: #f0f2f5; min-width: 140px; }
 .ah-tag {
   font-family: 'Share Tech Mono', monospace;
@@ -494,9 +494,9 @@ const combinations = [
 
 /* 激活状态 */
 .accordion-item.active { background: rgba(13, 16, 23, 0.9); }
-.accordion-item.active .accordion-header { border-bottom: 1px solid rgba(6, 182, 212, 0.1); }
-.accordion-item.active .ah-arrow { transform: rotate(-135deg); border-color: #06b6d4; }
-.accordion-item.active .ah-title { color: #06b6d4; }
+.accordion-item.active .accordion-header { border-bottom: 1px solid rgba(245, 158, 11, 0.1); }
+.accordion-item.active .ah-arrow { transform: rotate(-135deg); border-color: #f59e0b; }
+.accordion-item.active .ah-title { color: #f59e0b; }
 
 /* 内容区域 */
 .accordion-content {
@@ -515,7 +515,7 @@ const combinations = [
 }
 
 .ac-item { display: flex; flex-direction: column; gap: 12px; }
-.ac-label { font-size: 0.75rem; color: #06b6d4; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.ac-label { font-size: 0.75rem; color: #f59e0b; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
 .ac-val { font-size: 0.9rem; color: #9ca3af; line-height: 1.8; margin: 0; }
 
 /* 响应式 */
