@@ -71,205 +71,148 @@
         {{ loading ? '评测中...' : '开始评测' }}
       </button>
 
-      <!-- 结果展示 -->
-<!-- 体检单结果 -->
-<div v-if="result" class="report-card">
+      <!-- 评测结果：体检单样式 -->
+      <div v-if="result" class="report-card">
+        <!-- 装饰角 -->
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
 
-  <!-- 报告头 -->
-  <div class="report-header">
-    <div class="report-header-left">
-      <div class="report-logo">⬡</div>
-      <div>
-        <div class="report-title">模型鲁棒性评测报告</div>
-        <div class="report-subtitle">DRONE EVAL · MODEL ROBUSTNESS REPORT</div>
-      </div>
-    </div>
-    <div class="report-header-right">
-      <div class="report-id">NO. {{ reportId }}</div>
-      <div class="report-date">{{ reportDate }}</div>
-    </div>
-  </div>
+        <!-- 报告头部 -->
+        <div class="report-header">
+          <div class="rh-brand">
+            <span class="rh-logo">⬡</span>
+            <div class="rh-title-group">
+              <div class="rh-main-title">模型鲁棒性评测报告</div>
+              <div class="rh-sub-title">SINGLE MODEL ROBUSTNESS EVALUATION REPORT</div>
+            </div>
+          </div>
+          <div class="rh-meta">
+            <div class="rh-meta-item"><span>报告编号:</span> #{{ reportId }}</div>
+            <div class="rh-meta-item"><span>生成日期:</span> {{ reportDate }}</div>
+          </div>
+        </div>
 
-  <!-- 基本信息栏 -->
-  <div class="report-info-bar">
-    <div class="info-item">
-      <span class="info-label">受测模型</span>
-      <span class="info-value">{{ result.model }}</span>
-    </div>
-    <div class="info-divider"></div>
-    <div class="info-item">
-      <span class="info-label">攻击方法</span>
-      <span class="info-value">{{ result.attack }}</span>
-    </div>
-    <div class="info-divider"></div>
-    <div class="info-item">
-      <span class="info-label">数据集</span>
-      <span class="info-value">{{ result.dataset }}</span>
-    </div>
-    <div class="info-divider"></div>
-    <div class="info-item">
-      <span class="info-label">扰动强度 ε</span>
-      <span class="info-value">{{ result.eps }}</span>
-    </div>
-  </div>
+        <!-- 基本信息条 -->
+        <div class="info-bar">
+          <div class="ib-item">
+            <span class="ib-label">测试模型</span>
+            <span class="ib-val">{{ result.model }}</span>
+          </div>
+          <div class="ib-item">
+            <span class="ib-label">评估数据集</span>
+            <span class="ib-val">{{ result.dataset }}</span>
+          </div>
+          <div class="ib-item">
+            <span class="ib-label">攻击方法</span>
+            <span class="ib-val">{{ result.attack }}</span>
+          </div>
+          <div class="ib-item">
+            <span class="ib-label">扰动强度 ε</span>
+            <span class="ib-val">{{ result.eps }}</span>
+          </div>
+        </div>
 
-  <!-- 综合评级 -->
-  <div class="report-grade-section">
-    <div class="grade-left">
-      <div class="grade-label">综合鲁棒等级</div>
-      <div class="grade-value" :class="'grade-' + result.robust_level">
-        {{ result.robust_level }}
-      </div>
-      <div class="grade-desc">{{ gradeDesc(result.robust_level) }}</div>
-    </div>
-    <div class="grade-right">
-      <div class="grade-score-label">鲁棒评分</div>
-      <div class="grade-score">{{ result.robust_score?.toFixed(4) }}</div>
-      <div class="grade-score-bar-wrap">
-        <div class="grade-score-bar"
-          :style="{ width: Math.min(result.robust_score * 100, 100) + '%' }"
-          :class="'bar-' + result.robust_level">
+        <!-- 核心评分区 -->
+        <div class="score-section">
+          <div class="score-circle">
+            <div class="score-num">{{ result.robust_score?.toFixed(1) }}</div>
+            <div class="score-label">ROBUST SCORE</div>
+          </div>
+          <div class="grade-box">
+            <div class="grade-label">综合鲁棒等级评定</div>
+            <div class="grade-val" :class="'level-' + result.robust_level">{{ result.robust_level }}</div>
+            <div class="grade-desc">根据该攻击算法下的模型表现综合评定</div>
+          </div>
+        </div>
+
+        <!-- 详细数据表 -->
+        <div class="report-section-title"><span>▌</span> 评测项目明细 (Evaluation Details)</div>
+        <div class="report-table-wrap">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>检测项目</th>
+                <th>检测值</th>
+                <th>参考范围</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="td-name">清洁准确率 (Clean Accuracy)</td>
+                <td>{{ (result.clean_accuracy * 100).toFixed(2) }}%</td>
+                <td>≥ 70%</td>
+                <td>
+                  <span class="status-badge" :class="result.clean_accuracy >= 0.7 ? 'ok' : 'warn'">
+                    {{ result.clean_accuracy >= 0.7 ? '正常' : '偏低' }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="td-name">对抗准确率 (Adv Accuracy)</td>
+                <td class="td-adv">{{ (result.adv_accuracy * 100).toFixed(2) }}%</td>
+                <td>≥ 50%</td>
+                <td>
+                  <span class="status-badge" :class="result.adv_accuracy >= 0.5 ? 'ok' : 'danger'">
+                    {{ result.adv_accuracy >= 0.5 ? '正常' : '异常' }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="td-name">准确率下降 (Accuracy Drop)</td>
+                <td class="td-drop">{{ (result.accuracy_drop * 100).toFixed(2) }}%</td>
+                <td>≤ 20%</td>
+                <td>
+                  <span class="status-badge" :class="result.accuracy_drop <= 0.2 ? 'ok' : 'danger'">
+                    {{ result.accuracy_drop <= 0.2 ? '正常' : '异常' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 可视化分析 -->
+        <div class="report-section-title"><span>▌</span> 可视化图表分析 (Visual Analysis)</div>
+        <div class="report-visuals">
+          <!-- 原始 vs 对抗样本 -->
+          <div class="visual-block" v-if="result.compare_path">
+            <div class="visual-label">1. 原始图像 (Original) vs 对抗样本 (Adversarial)</div>
+            <div class="visual-img-wrap">
+              <img :src="imgUrl(result.compare_path)" alt="对比图" />
+            </div>
+            <p class="visual-desc">
+              对比分析：左侧为原始输入图像，右侧为添加扰动（ε={{ result.eps }}）后的对抗样本。虽然视觉差异极小，但已成功诱导模型产生错误判断。
+            </p>
+          </div>
+
+          <!-- 鲁棒性性能曲线 -->
+          <div class="visual-block" v-if="result.curve_path">
+            <div class="visual-label">2. 鲁棒性性能曲线 (Robustness Curve)</div>
+            <div class="visual-img-wrap">
+              <img :src="imgUrl(result.curve_path)" alt="鲁棒性曲线" />
+            </div>
+            <p class="visual-desc">
+              曲线分析显示：随着扰动强度（eps）逐步提升，模型准确率呈现下降趋势，反映了模型随扰动增强时的鲁棒性衰减规律。
+            </p>
+          </div>
+        </div>
+
+        <!-- 结论 -->
+        <div class="report-conclusion">
+          <div class="conclusion-label">综合评测结论:</div>
+          <div class="conclusion-text">
+            {{ conclusionText(result) }}
+          </div>
+        </div>
+
+        <!-- 报告页脚 -->
+        <div class="report-footer">
+          <div class="rf-left">DRONE ROBUSTNESS EVALUATION SYSTEM</div>
+          <div class="rf-right">CONFIDENTIAL / INTERNAL USE ONLY</div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- 检测项目表 -->
-  <div class="report-section-title">
-    <span>▌</span> 检测项目明细
-  </div>
-
-  <div class="report-table">
-    <div class="rt-head">
-      <span>检测项目</span>
-      <span>检测值</span>
-      <span>参考范围</span>
-      <span>状态</span>
-    </div>
-
-    <div class="rt-row">
-      <span class="rt-name">清洁准确率 <em>Clean Accuracy</em></span>
-      <span class="rt-val">{{ (result.clean_accuracy * 100).toFixed(2) }}%</span>
-      <span class="rt-ref">≥ 70%</span>
-      <span class="rt-status" :class="result.clean_accuracy >= 0.7 ? 'status-ok' : 'status-warn'">
-        {{ result.clean_accuracy >= 0.7 ? '正常' : '偏低' }}
-      </span>
-    </div>
-
-    <div class="rt-row">
-      <span class="rt-name">对抗准确率 <em>Adv Accuracy</em></span>
-      <span class="rt-val warn">{{ (result.adv_accuracy * 100).toFixed(2) }}%</span>
-      <span class="rt-ref">≥ 50%</span>
-      <span class="rt-status" :class="result.adv_accuracy >= 0.5 ? 'status-ok' : 'status-danger'">
-        {{ result.adv_accuracy >= 0.5 ? '正常' : '异常' }}
-      </span>
-    </div>
-
-    <div class="rt-row">
-      <span class="rt-name">准确率下降幅度 <em>Accuracy Drop</em></span>
-      <span class="rt-val danger">{{ (result.accuracy_drop * 100).toFixed(2) }}%</span>
-      <span class="rt-ref">≤ 20%</span>
-      <span class="rt-status" :class="result.accuracy_drop <= 0.2 ? 'status-ok' : 'status-danger'">
-        {{ result.accuracy_drop <= 0.2 ? '正常' : '异常' }}
-      </span>
-    </div>
-
-    <div class="rt-row">
-      <span class="rt-name">鲁棒评分 <em>Robust Score</em></span>
-      <span class="rt-val">{{ result.robust_score?.toFixed(4) }}</span>
-      <span class="rt-ref">≥ 0.5</span>
-      <span class="rt-status" :class="result.robust_score >= 0.5 ? 'status-ok' : 'status-warn'">
-        {{ result.robust_score >= 0.5 ? '合格' : '不合格' }}
-      </span>
-    </div>
-  </div>
-
-  <!-- 可视化指标条 -->
-  <div class="report-section-title">
-    <span>▌</span> 指标可视化
-  </div>
-
-  <div class="report-bars">
-    <div class="bar-item">
-      <div class="bar-item-head">
-        <span class="bar-name">清洁准确率</span>
-        <span class="bar-pct">{{ (result.clean_accuracy * 100).toFixed(1) }}%</span>
-      </div>
-      <div class="bar-track">
-        <div class="bar-fill fill-green" :style="{ width: (result.clean_accuracy * 100) + '%' }"></div>
-        <div class="bar-threshold" style="left: 70%"></div>
-      </div>
-    </div>
-
-    <div class="bar-item">
-      <div class="bar-item-head">
-        <span class="bar-name">对抗准确率</span>
-        <span class="bar-pct warn">{{ (result.adv_accuracy * 100).toFixed(1) }}%</span>
-      </div>
-      <div class="bar-track">
-        <div class="bar-fill fill-amber" :style="{ width: (result.adv_accuracy * 100) + '%' }"></div>
-        <div class="bar-threshold" style="left: 50%"></div>
-      </div>
-    </div>
-
-    <div class="bar-item">
-      <div class="bar-item-head">
-        <span class="bar-name">准确率下降</span>
-        <span class="bar-pct danger">{{ (result.accuracy_drop * 100).toFixed(1) }}%</span>
-      </div>
-      <div class="bar-track">
-        <div class="bar-fill fill-red" :style="{ width: (result.accuracy_drop * 100) + '%' }"></div>
-        <div class="bar-threshold" style="left: 20%"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 图片区 -->
-  <template v-if="result.curve_path || result.compare_path">
-    <div class="report-section-title"><span>▌</span> 可视化图表分析</div>
-    <div class="report-images">
-      <!-- 原始 vs 对抗样本 -->
-      <div class="img-block" v-if="result.compare_path">
-        <div class="img-label">原始图像 (Original) vs 对抗样本 (Adversarial)</div>
-        <div class="img-wrap">
-          <img :src="imgUrl(result.compare_path)" alt="对比图" class="result-img" />
-        </div>
-        <div class="img-desc highlight">
-          对比分析：左侧为原始输入图像，右侧为添加扰动（ε={{ result.eps }}）后的对抗样本。虽然视觉差异极小，但已成功诱导模型产生错误判断。
-        </div>
-      </div>
-      <!-- 鲁棒性性能曲线 -->
-      <div class="img-block" v-if="result.curve_path">
-        <div class="img-label">鲁棒性性能曲线 Robustness Performance Curve</div>
-        <div class="img-wrap">
-          <img :src="imgUrl(result.curve_path)" alt="鲁棒性曲线" class="result-img" />
-        </div>
-        <div class="img-desc highlight">
-          曲线分析显示：随着扰动强度（eps）逐步提升，模型准确率呈现下降趋势，说明模型在强对抗环境下的鲁棒性表现不足，对抗强度越高，模型的预测偏差越明显。
-        </div>
-      </div>
-    </div>
-  </template>
-
-  <!-- 报告结论 -->
-  <div class="report-conclusion">
-    <div class="conclusion-icon" :class="'grade-' + result.robust_level">
-      {{ conclusionIcon(result.robust_level) }}
-    </div>
-    <div class="conclusion-text">
-      <div class="conclusion-title">评测结论</div>
-      <div class="conclusion-body">{{ conclusionText(result) }}</div>
-    </div>
-  </div>
-
-  <!-- 报告底部 -->
-  <div class="report-footer">
-    <span>DRONE EVAL 无人机鲁棒性评测平台</span>
-    <span>本报告由系统自动生成，仅供参考</span>
-    <span>{{ reportDate }}</span>
-  </div>
-
-</div>
     </div>
   </div>
 </template>
@@ -384,45 +327,6 @@ async function handleSubmit() {
   font-family: 'Noto Sans SC', sans-serif;
 }
 
-/* ── 导航栏 ── */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 18px 48px;
-  border-bottom: 1px solid #9ca3af;
-  position: sticky;
-  top: 0;
-  background: #0a0c0f;
-  z-index: 10;
-}
-.navbar-brand {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 1.1rem;
-  letter-spacing: 0.15em;
-  color: #e8eaed;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.brand-icon { color: #f59e0b; font-size: 1.4rem; }
-.brand-name em { font-style: normal; color: #f59e0b; }
-
-.back-btn {
-  background: none;
-  border: 1px solid #d4d8de;
-  color: #9ca3af;
-  padding: 5px 14px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  border-radius: 2px;
-  transition: all 0.2s;
-}
-.back-btn:hover { border-color: #f59e0b; color: #f59e0b; }
-
-/* ── 内容区 ── */
 .content {
   max-width: 900px;
   margin: 0 auto;
@@ -556,442 +460,175 @@ async function handleSubmit() {
 }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-/* ── 结果 ── */
-.result-box {
-  margin-top: 48px;
-  border: 1px solid #9ca3af;
-  border-radius: 4px;
-  overflow: hidden;
-}
-.result-title {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.8rem;
-  letter-spacing: 0.15em;
-  color: #f59e0b;
-  padding: 16px 24px;
-  border-bottom: 1px solid #9ca3af;
-  background: #0d1017;
-}
-.result-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: #9ca3af;
-}
-.result-item {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 20px 24px;
-  background: #0d1017;
-}
-.result-label {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.1em;
-  color: #d4d8de;
-  text-transform: uppercase;
-}
-.result-value {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #e8eaed;
-  font-family: 'Share Tech Mono', monospace;
-}
-.result-value.warn   { color: #f59e0b; }
-.result-value.danger { color: #f43f5e; }
-.level-A { color: #22c55e; }
-.level-B { color: #06b6d4; }
-.level-C { color: #f59e0b; }
-.level-D, .level-Poor { color: #f43f5e; }
-
-/* ── 图片区域 ── */
-.result-images {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  background: #9ca3af;
-  border-top: 1px solid #9ca3af;
-}
-
-.img-block {
-  background: #0d1017;
-  padding: 20px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.img-label {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  color: #d4d8de;
-  text-transform: uppercase;
-}
-
-.img-wrap {
-  background: #080a0d;
-  border: 1px solid #9ca3af;
-  border-radius: 2px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-}
-
-.result-img {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.img-error {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.72rem;
-  color: #d4d8de;
-  letter-spacing: 0.08em;
-}
-
-@media (max-width: 768px) {
-  .result-images { grid-template-columns: 1fr; }
-}
-/* ══ 体检单 ══ */
+/* ── 结果报告（体检单样式） ── */
 .report-card {
-  margin-top: 48px;
-  border: 1px solid #1e2530;
-  border-radius: 4px;
-  overflow: hidden;
+  margin-top: 60px;
   background: #0d1017;
+  border: 1px solid #1e2530;
+  border-top: 4px solid #f59e0b;
+  border-radius: 4px;
+  position: relative;
+  padding: 48px;
+  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.6);
 }
+
+/* 装饰角 */
+.corner { position: absolute; width: 16px; height: 16px; border-color: #f59e0b; border-style: solid; opacity: 0.6; }
+.tl { top: 12px; left: 12px; border-width: 2px 0 0 2px; }
+.tr { top: 12px; right: 12px; border-width: 2px 2px 0 0; }
+.bl { bottom: 12px; left: 12px; border-width: 0 0 2px 2px; }
+.br { bottom: 12px; right: 12px; border-width: 0 2px 2px 0; }
 
 /* 报告头 */
 .report-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 24px 32px;
-  border-bottom: 2px solid #f59e0b;
-  background: #080a0d;
+  align-items: flex-start;
+  border-bottom: 1px solid #1e2530;
+  padding-bottom: 24px;
+  margin-bottom: 24px;
 }
-.report-header-left { display: flex; align-items: center; gap: 16px; }
-.report-logo { font-size: 2rem; color: #f59e0b; }
-.report-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #f0f2f5;
-  letter-spacing: 0.05em;
-}
-.report-subtitle {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.18em;
-  color: #9ca3af;
-  margin-top: 4px;
-}
-.report-header-right { text-align: right; }
-.report-id {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.75rem;
-  color: #f59e0b;
-  letter-spacing: 0.1em;
-}
-.report-date {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.65rem;
-  color: #9ca3af;
-  margin-top: 4px;
-}
+.rh-brand { display: flex; align-items: center; gap: 16px; }
+.rh-logo { font-size: 2.4rem; color: #f59e0b; }
+.rh-main-title { font-size: 1.5rem; font-weight: 700; color: #f0f2f5; margin-bottom: 4px; }
+.rh-sub-title { font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; color: #4b5563; letter-spacing: 0.1em; }
+.rh-meta { text-align: right; font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; color: #4b5563; }
+.rh-meta span { color: #374151; margin-right: 8px; }
 
-/* 基本信息栏 */
-.report-info-bar {
+/* 基本信息条 */
+.info-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  background: rgba(255,255,255,0.02);
+  padding: 20px 24px;
+  border-radius: 2px;
+  margin-bottom: 40px;
+}
+.ib-item { display: flex; flex-direction: column; gap: 6px; }
+.ib-label { font-size: 0.65rem; color: #4b5563; font-weight: 700; text-transform: uppercase; }
+.ib-val { font-size: 0.9rem; color: #d4d8de; font-weight: 700; }
+
+/* 核心评分 */
+.score-section {
   display: flex;
   align-items: center;
-  padding: 16px 32px;
-  background: #0a0c0f;
-  border-bottom: 1px solid #1e2530;
-  gap: 0;
+  gap: 60px;
+  padding: 0 24px;
+  margin-bottom: 56px;
 }
-.info-item {
+.score-circle {
+  width: 140px; height: 140px;
+  border: 4px solid #1e2530;
+  border-top-color: #f59e0b;
+  border-radius: 50%;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  flex: 1;
-}
-.info-divider {
-  width: 1px;
-  height: 32px;
-  background: #1e2530;
-  margin: 0 24px;
-  flex-shrink: 0;
-}
-.info-label {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  color: #9ca3af;
-  text-transform: uppercase;
-}
-.info-value {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.98rem;
-  color: #e8eaed;
-}
-
-/* 综合评级 */
-.report-grade-section {
-  display: flex;
   align-items: center;
-  padding: 28px 32px;
-  gap: 48px;
-  border-bottom: 1px solid #1e2530;
-  background: #080a0d;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(245,158,11,0.05) 0%, transparent 70%);
 }
-.grade-left { display: flex; flex-direction: column; gap: 8px; align-items: center; }
-.grade-label {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.76rem;
-  letter-spacing: 0.15em;
-  color: #9ca3af;
-  text-transform: uppercase;
-}
-.grade-value {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 4rem;
-  font-weight: 700;
-  line-height: 1;
-}
-.grade-A { color: #22c55e; }
-.grade-B { color: #06b6d4; }
-.grade-C { color: #f59e0b; }
-.grade-D { color: #f43f5e; }
-.grade-Poor { color: #f43f5e; }
+.score-num { font-family: 'Share Tech Mono', monospace; font-size: 3rem; color: #f59e0b; line-height: 1; }
+.score-label { font-size: 0.6rem; color: #4b5563; margin-top: 4px; letter-spacing: 0.1em; }
 
-.grade-desc { font-size: 0.78rem; color: #9ca3af; text-align: center; max-width: 140px; line-height: 1.5; }
+.grade-box { flex: 1; }
+.grade-label { font-size: 0.85rem; color: #6b7280; margin-bottom: 8px; }
+.grade-val { font-family: 'Share Tech Mono', monospace; font-size: 4rem; font-weight: 700; line-height: 1; margin-bottom: 12px; }
+.grade-desc { font-size: 0.75rem; color: #4b5563; }
 
-.grade-right { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-.grade-score-label {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.66rem;
-  letter-spacing: 0.15em;
-  color: #9ca3af;
-}
-.grade-score {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 2rem;
-  color: #e8eaed;
-  font-weight: 700;
-}
-.grade-score-bar-wrap {
-  height: 6px;
-  background: #1e2530;
-  border-radius: 3px;
-  overflow: hidden;
-  max-width: 320px;
-}
-.grade-score-bar {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 1s ease;
-}
-.bar-A { background: #22c55e; }
-.bar-B { background: #06b6d4; }
-.bar-C { background: #f59e0b; }
-.bar-D { background: #f43f5e; }
-.bar-Poor { background: #f43f5e; }
+.level-A { color: #10b981; }
+.level-B { color: #3b82f6; }
+.level-C { color: #f59e0b; }
+.level-D { color: #f43f5e; }
 
-/* 章节标题 */
+/* 小节标题 */
 .report-section-title {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.78rem;
-  letter-spacing: 0.15em;
-  color: #9ca3af;
-  padding: 16px 32px 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #f0f2f5;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  border-top: 1px solid #1e2530;
+  gap: 12px;
 }
-.report-section-title span:first-child { color: #f59e0b; }
+.report-section-title span { color: #f59e0b; font-size: 1.1rem; }
 
-/* 检测表格 */
-.report-table {
-  margin: 0 32px 16px;
-  border: 1px solid #1e2530;
-  border-radius: 2px;
-  overflow: hidden;
-}
-.rt-head {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 80px;
-  padding: 10px 16px;
-  background: #080a0d;
-  border-bottom: 1px solid #1e2530;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  color: #9ca3af;
-  text-transform: uppercase;
-}
-.rt-row {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 80px;
-  padding: 14px 16px;
-  border-bottom: 1px solid #1e2530;
-  align-items: center;
-  transition: background 0.15s;
-}
-.rt-row:last-child { border-bottom: none; }
-.rt-row:hover { background: #0a0c0f; }
+/* 详细表格 */
+.report-table-wrap { margin-bottom: 56px; border: 1px solid #1e2530; border-radius: 2px; }
+.report-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.report-table th { background: rgba(255,255,255,0.02); color: #4b5563; font-weight: 700; text-align: left; padding: 14px 20px; border-bottom: 1px solid #1e2530; }
+.report-table td { padding: 14px 20px; border-bottom: 1px solid #1e2530; color: #9ca3af; }
+.td-name { font-family: 'Share Tech Mono', monospace; color: #f0f2f5; font-weight: 700; }
+.td-adv { color: #f59e0b; }
+.td-drop { color: #f43f5e; }
 
-.rt-name { font-size: 0.88rem; color: #d4d8de; }
-.rt-name em { display: block; font-style: normal; font-family: 'Share Tech Mono', monospace; font-size: 0.62rem; color: #9ca3af; letter-spacing: 0.05em; margin-top: 2px; }
-.rt-val { font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; color: #e8eaed; font-weight: 700; }
-.rt-val.warn { color: #f59e0b; }
-.rt-val.danger { color: #f43f5e; }
-.rt-ref { font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; color: #9ca3af; }
-
-.rt-status {
+.status-badge {
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.7rem;
-  letter-spacing: 0.08em;
   padding: 3px 10px;
   border-radius: 2px;
-  text-align: center;
-  width: fit-content;
 }
-.status-ok     { background: rgba(34,197,94,0.1);  color: #22c55e; border: 1px solid rgba(34,197,94,0.2); }
-.status-warn   { background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); }
-.status-danger { background: rgba(244,63,94,0.1);  color: #f43f5e; border: 1px solid rgba(244,63,94,0.2); }
+.status-badge.ok { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+.status-badge.warn { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+.status-badge.danger { background: rgba(244, 63, 94, 0.1); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.2); }
 
-/* 指标条 */
-.report-bars { padding: 8px 32px 20px; display: flex; flex-direction: column; gap: 16px; }
-.bar-item { display: flex; flex-direction: column; gap: 6px; }
-.bar-item-head { display: flex; justify-content: space-between; align-items: center; }
-.bar-name { font-size: 0.82rem; color: #9ca3af; }
-.bar-pct { font-family: 'Share Tech Mono', monospace; font-size: 0.82rem; color: #e8eaed; }
-.bar-pct.warn { color: #f59e0b; }
-.bar-pct.danger { color: #f43f5e; }
-
-.bar-track {
-  position: relative;
-  height: 8px;
-  background: #1e2530;
+/* 可视化分析 */
+.report-visuals { display: flex; flex-direction: column; gap: 40px; margin-bottom: 56px; }
+.visual-block { display: flex; flex-direction: column; gap: 16px; }
+.visual-label { font-size: 0.85rem; color: #9ca3af; font-weight: 700; }
+.visual-img-wrap {
+  background: #080a0d;
+  border: 1px solid #1e2530;
   border-radius: 4px;
-  overflow: visible;
+  overflow: hidden;
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.bar-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 1s ease;
-}
-.fill-green { background: #22c55e; }
-.fill-amber { background: #f59e0b; }
-.fill-red   { background: #f43f5e; }
-
-/* 阈值刻度线 */
-.bar-threshold {
-  position: absolute;
-  top: -4px;
-  width: 2px;
-  height: 16px;
-  background: #9ca3af;
-  border-radius: 1px;
-}
-.bar-threshold::after {
-  content: '基准';
-  position: absolute;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.55rem;
-  color: #9ca3af;
-  white-space: nowrap;
-}
-
-/* 图片 */
-.report-images {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  padding: 8px 32px 20px;
-}
-.img-block { display: flex; flex-direction: column; gap: 8px; }
-.img-label { font-family: 'Share Tech Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em; color: #374151; text-transform: uppercase; }
-.img-wrap { background: #080a0d; border: 1px solid #1e2530; border-radius: 2px; overflow: hidden; min-height: 160px; display: flex; align-items: center; justify-content: center; }
-.result-img { width: 100%; height: auto; display: block; }
-
-.img-desc {
-  font-size: 0.75rem;
+.visual-img-wrap img { width: 100%; height: auto; max-height: 500px; object-fit: contain; }
+.visual-desc {
+  font-size: 0.8rem;
   color: #6b7280;
   line-height: 1.6;
-  padding: 8px 12px;
-  background: #0a0c0f;
-  border-radius: 2px;
-  border-left: 2px solid #374151;
-}
-.img-desc.highlight {
-  color: #9ca3af;
-  border-left-color: #f59e0b;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.01);
+  border-left: 3px solid #f59e0b;
+  margin: 0;
 }
 
 /* 结论 */
 .report-conclusion {
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  margin: 0 32px 0;
-  padding: 20px 24px;
-  border: 1px solid #1e2530;
-  border-radius: 2px;
-  background: #080a0d;
-  border-top: 1px solid #1e2530;
+  background: rgba(245,158,11,0.03);
+  border: 1px solid rgba(245,158,11,0.1);
+  padding: 24px;
+  border-radius: 4px;
+  margin-bottom: 48px;
 }
-.conclusion-icon {
-  font-size: 1.8rem;
-  font-weight: 700;
-  font-family: 'Share Tech Mono', monospace;
-  flex-shrink: 0;
-  width: 40px;
-  text-align: center;
-}
-.conclusion-title {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.65rem;
-  letter-spacing: 0.15em;
-  color: #9ca3af;
-  margin-bottom: 8px;
-  text-transform: uppercase;
-}
-.conclusion-body { font-size: 0.88rem; color: #9ca3af; line-height: 1.8; }
+.conclusion-label { font-size: 0.9rem; font-weight: 700; color: #f59e0b; margin-bottom: 12px; }
+.conclusion-text { font-size: 0.88rem; color: #9ca3af; line-height: 1.8; }
+.conclusion-text strong { color: #f0f2f5; }
 
-/* 报告页脚 */
+/* 页脚 */
 .report-footer {
   display: flex;
   justify-content: space-between;
-  padding: 14px 32px;
   border-top: 1px solid #1e2530;
-  margin-top: 20px;
+  padding-top: 24px;
   font-family: 'Share Tech Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.08em;
-  color: #9ca3af;
-  background: #080a0d;
+  font-size: 0.65rem;
+  color: #374151;
+  letter-spacing: 0.1em;
+}
+
+@media (max-width: 900px) {
+  .report-card { padding: 32px 24px; }
+  .info-bar { grid-template-columns: repeat(2, 1fr); }
+  .score-section { flex-direction: column; gap: 32px; text-align: center; }
+  .report-table-wrap { overflow-x: auto; }
 }
 
 @media (max-width: 768px) {
-  .report-images { grid-template-columns: 1fr; }
-  .report-info-bar { flex-wrap: wrap; gap: 16px; }
-  .info-divider { display: none; }
-  .rt-head, .rt-row { grid-template-columns: 2fr 1fr 60px; }
-  .rt-ref { display: none; }
-}
-/* ── 响应式 ── */
-@media (max-width: 768px) {
   .content { padding: 32px 24px; }
-  .navbar { padding: 18px 24px; }
-  .result-grid { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
