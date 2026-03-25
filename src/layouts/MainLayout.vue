@@ -18,14 +18,41 @@
       </div>
     </header>
     <main><RouterView /></main>
+
+    <!-- 悬浮机器人 GIF 入口 -->
+    <div class="bot-trigger" @click="showBot = true">
+      <img src="/芙宁娜.gif" alt="AI Assistant" />
+      <div class="bot-tooltip">有问题问我</div>
+    </div>
+
+    <!-- 豆包智能体弹窗 -->
+    <div v-if="showBot" class="bot-modal-overlay" @click.self="showBot = false">
+      <div class="bot-modal">
+        <div class="bot-modal-header">
+          <div class="bm-title">
+            <span class="bm-icon">⬡</span>
+            无人机鲁棒检测专属问答官
+          </div>
+          <button class="bm-close" @click="showBot = false">×</button>
+        </div>
+        <div class="bot-modal-body">
+          <iframe 
+            src="https://doubao.com/bot/qbqXoSum" 
+            frameborder="0"
+            allow="microphone; camera"
+          ></iframe>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { RouterView, useRouter } from 'vue-router'
 
 const router = useRouter()
+const showBot = ref(false)
 const username = computed(() => localStorage.getItem('username') || 'USER')
 
 function handleLogout() {
@@ -146,4 +173,89 @@ function handleLogout() {
 .logout-btn:hover { border-color: #f59e0b; color: #f59e0b; }
 
 main { flex: 1; display: flex; flex-direction: column; }
+
+/* 机器人入口样式 */
+.bot-trigger {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 100px;
+  height:100px;
+  cursor: pointer;
+  z-index: 1000;
+  transition: transform 0.2s;
+}
+.bot-trigger:hover { transform: scale(1.1); }
+.bot-trigger img { width: 100%; height: 100%; object-fit: contain; }
+
+.bot-tooltip {
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-right: 12px;
+  background: #13171f;
+  border: 1px solid #1e2530;
+  color: #f59e0b;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.bot-trigger:hover .bot-tooltip { opacity: 1; }
+
+/* 弹窗样式 */
+.bot-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.bot-modal {
+  width: 90%;
+  max-width: 800px;
+  height: 80vh;
+  background: #0d1017;
+  border: 1px solid #1e2530;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+.bot-modal-header {
+  height: 56px;
+  background: #13171f;
+  border-bottom: 1px solid #1e2530;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+.bm-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f59e0b;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+}
+.bm-close {
+  background: none; border: none;
+  color: #6b7280; font-size: 1.5rem;
+  cursor: pointer; transition: color 0.2s;
+}
+.bm-close:hover { color: #f43f5e; }
+
+.bot-modal-body { flex: 1; position: relative; }
+.bot-modal-body iframe { width: 100%; height: 100%; border: none; }
 </style>
