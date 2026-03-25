@@ -20,7 +20,6 @@
       </div>
 
       <div class="login-wrap">
-        <!-- 品牌标识 -->
         <div class="brand">
           <div class="brand-logo">
             <span class="logo-hex">⬡</span>
@@ -58,12 +57,58 @@
                 <span class="tab-text">建立档案</span>
                 <span class="tab-sub">REGISTER</span>
               </button>
+              <button
+                v-if="mode === 'forgot'"
+                class="tab active"
+              >
+                <span class="tab-text">找回密钥</span>
+                <span class="tab-sub">RESET</span>
+              </button>
             </div>
           </div>
 
           <div class="form-container">
             <div class="form-group">
-              <div class="field">
+              <!-- 找回密码模式：第一步输入邮箱获取验证码 -->
+              <div class="field" v-if="mode === 'forgot'">
+                <div class="field-header">
+                  <span class="field-label">绑定邮箱</span>
+                  <span class="field-id">#RECOVERY_EMAIL</span>
+                </div>
+                <div class="input-wrapper email-input-group">
+                  <input
+                    v-model="form.email"
+                    class="field-input"
+                    placeholder="请输入绑定的邮箱"
+                  />
+                  <button 
+                    class="send-code-btn" 
+                    :disabled="codeTimer > 0 || !form.email || loading"
+                    @click="handleSendCode"
+                  >
+                    {{ codeTimer > 0 ? `${codeTimer}s` : '获取验证码' }}
+                  </button>
+                  <div class="input-focus-line"></div>
+                </div>
+              </div>
+
+              <!-- 找回密码模式：第二步输入验证码 -->
+              <div class="field" v-if="mode === 'forgot'">
+                <div class="field-header">
+                  <span class="field-label">验证码</span>
+                  <span class="field-id">#VERIFY_CODE</span>
+                </div>
+                <div class="input-wrapper">
+                  <input
+                    v-model="form.code"
+                    class="field-input"
+                    placeholder="请输入邮箱验证码"
+                  />
+                  <div class="input-focus-line"></div>
+                </div>
+              </div>
+
+              <div class="field" v-if="mode !== 'forgot'">
                 <div class="field-header">
                   <span class="field-label">识别码</span>
                   <span class="field-id">#USER_ID</span>
@@ -79,28 +124,26 @@
                 </div>
               </div>
 
-              <!-- 注册时额外显示 -->
-              <transition name="fade">
-                <div class="field" v-if="mode === 'register'">
-                  <div class="field-header">
-                    <span class="field-label">通信信道</span>
-                    <span class="field-id">#EMAIL</span>
-                  </div>
-                  <div class="input-wrapper">
-                    <input
-                      v-model="form.email"
-                      class="field-input"
-                      placeholder="请输入邮箱"
-                      @keyup.enter="handleSubmit"
-                    />
-                    <div class="input-focus-line"></div>
-                  </div>
+              <!-- 注册时显示邮箱（必填） -->
+              <div class="field" v-if="mode === 'register'">
+                <div class="field-header">
+                  <span class="field-label">通信信道</span>
+                  <span class="field-id">#EMAIL</span>
                 </div>
-              </transition>
+                <div class="input-wrapper">
+                  <input
+                    v-model="form.email"
+                    class="field-input"
+                    placeholder="请输入邮箱（必填）"
+                    @keyup.enter="handleSubmit"
+                  />
+                  <div class="input-focus-line"></div>
+                </div>
+              </div>
 
               <div class="field">
                 <div class="field-header">
-                  <span class="field-label">访问密钥</span>
+                  <span class="field-label">{{ mode === 'forgot' ? '新访问密钥' : '访问密钥' }}</span>
                   <span class="field-id">#ACCESS_KEY</span>
                 </div>
                 <div class="input-wrapper">
@@ -108,49 +151,54 @@
                     v-model="form.password"
                     type="password"
                     class="field-input"
-                    placeholder="请输入密码"
+                    :placeholder="mode === 'forgot' ? '请输入新密码' : '请输入密码'"
                     @keyup.enter="handleSubmit"
                   />
                   <div class="input-focus-line"></div>
                 </div>
               </div>
 
-              <transition name="fade">
-                <div class="field" v-if="mode === 'register'">
-                  <div class="field-header">
-                    <span class="field-label">密钥确认</span>
-                    <span class="field-id">#VERIFY</span>
-                  </div>
-                  <div class="input-wrapper">
-                    <input
-                      v-model="form.confirmPassword"
-                      type="password"
-                      class="field-input"
-                      placeholder="再次输入密码"
-                      @keyup.enter="handleSubmit"
-                    />
-                    <div class="input-focus-line"></div>
-                  </div>
+              <div class="field" v-if="mode !== 'login'">
+                <div class="field-header">
+                  <span class="field-label">密钥确认</span>
+                  <span class="field-id">#VERIFY</span>
                 </div>
-              </transition>
+                <div class="input-wrapper">
+                  <input
+                    v-model="form.confirmPassword"
+                    type="password"
+                    class="field-input"
+                    placeholder="再次输入密码"
+                    @keyup.enter="handleSubmit"
+                  />
+                  <div class="input-focus-line"></div>
+                </div>
+              </div>
             </div>
 
             <div class="form-footer">
+              <div class="forgot-link-wrap" v-if="mode === 'login'">
+                <button class="forgot-btn" @click="mode = 'forgot'">忘记密码？</button>
+              </div>
+              <div class="forgot-link-wrap" v-if="mode === 'forgot'">
+                <button class="forgot-btn" @click="mode = 'login'">返回登录</button>
+              </div>
+
+              <button class="login-btn" @click="handleSubmit" :disabled="loading">
+                <div class="btn-bg"></div>
+                <span v-if="loading" class="loading-spinner"></span>
+                <span class="btn-text">
+                  {{ loading ? '同步中...' : mode === 'login' ? '执行登录指令' : mode === 'forgot' ? '确认修改密钥' : '建立访问权限' }}
+                </span>
+                <span class="btn-arrow">→</span>
+              </button>
+
               <p class="error" v-if="error">
                 <span class="error-icon">!</span> {{ error }}
               </p>
               <p class="success" v-if="successMsg">
                 <span class="success-icon">✓</span> {{ successMsg }}
               </p>
-
-              <button class="login-btn" @click="handleSubmit" :disabled="loading">
-                <div class="btn-bg"></div>
-                <span v-if="loading" class="loading-spinner"></span>
-                <span class="btn-text">
-                  {{ loading ? '同步中...' : mode === 'login' ? '执行登录指令' : '建立访问权限' }}
-                </span>
-                <span class="btn-arrow">→</span>
-              </button>
             </div>
           </div>
         </div>
@@ -186,16 +234,19 @@ import api from '../api/index.js'
 
 const router = useRouter()
 
-const mode = ref('login') // 'login' | 'register'
+const mode = ref('login') // 'login' | 'register' | 'forgot'
 const loading = ref(false)
 const error = ref('')
 const successMsg = ref('')
+const codeTimer = ref(0)
+let timerId = null
 
 const form = ref({
   username: '',
   email: '',
   password: '',
   confirmPassword: '',
+  code: '', // 找回密码验证码
 })
 
 // 切换 tab 时清空状态
@@ -203,14 +254,78 @@ function switchMode(m) {
   mode.value = m
   error.value = ''
   successMsg.value = ''
-  form.value = { username: '', email: '', password: '', confirmPassword: '' }
+  form.value = { username: '', email: '', password: '', confirmPassword: '', code: '' }
+  if (timerId) {
+    clearInterval(timerId)
+    codeTimer.value = 0
+  }
 }
 
 function handleSubmit() {
   if (mode.value === 'login') {
     handleLogin()
-  } else {
+  } else if (mode.value === 'register') {
     handleRegister()
+  } else {
+    handleResetPassword()
+  }
+}
+
+// ── 发送验证码 ────────────────────────────────
+async function handleSendCode() {
+  if (!form.value.email) {
+    error.value = '请先输入邮箱'
+    return
+  }
+  
+  loading.value = true
+  error.value = ''
+  try {
+    await api.post('/auth/send-code', { email: form.value.email })
+    successMsg.value = '验证码已发送至邮箱'
+    startTimer()
+  } catch (e) {
+    error.value = e.response?.data?.message ?? '发送失败，请检查邮箱是否正确'
+  } finally {
+    loading.value = false
+  }
+}
+
+function startTimer() {
+  codeTimer.value = 60
+  timerId = setInterval(() => {
+    codeTimer.value--
+    if (codeTimer.value <= 0) {
+      clearInterval(timerId)
+    }
+  }, 1000)
+}
+
+// ── 重置密码 ──────────────────────────────────
+async function handleResetPassword() {
+  error.value = ''
+  if (!form.value.email || !form.value.code || !form.value.password) {
+    error.value = '请填写完整信息'
+    return
+  }
+  if (form.value.password !== form.value.confirmPassword) {
+    error.value = '两次密码不一致'
+    return
+  }
+
+  loading.value = true
+  try {
+    await api.post('/auth/reset-password', {
+      email: form.value.email,
+      code: form.value.code,
+      newPassword: form.value.password
+    })
+    successMsg.value = '密码重置成功'
+    setTimeout(() => switchMode('login'), 1500)
+  } catch (e) {
+    error.value = e.response?.data?.message ?? '重置失败，验证码可能已过期'
+  } finally {
+    loading.value = false
   }
 }
 
@@ -250,8 +365,8 @@ async function handleRegister() {
   successMsg.value = ''
 
   // 前端校验
-  if (!form.value.username || !form.value.password) {
-    error.value = '用户名和密码不能为空'
+  if (!form.value.username || !form.value.password || !form.value.email) {
+    error.value = '用户名、密码和邮箱不能为空'
     return
   }
   if (form.value.password.length < 6) {
@@ -502,6 +617,51 @@ async function handleRegister() {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .field-input:focus + .input-focus-line { width: 100%; left: 0; }
+
+/* ── 找回密码 ── */
+.forgot-link-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+.forgot-btn {
+  background: none;
+  border: none;
+  color: #4b5563;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.forgot-btn:hover { color: #f59e0b; }
+
+.email-input-group {
+  display: flex;
+  gap: 12px;
+}
+.send-code-btn {
+  flex-shrink: 0;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+  padding: 0 16px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.75rem;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.send-code-btn:hover:not(:disabled) {
+  background: #f59e0b;
+  color: #0a0c0f;
+}
+.send-code-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: #374151;
+  color: #374151;
+}
 
 /* ── 按钮 ── */
 .form-footer { margin-top: 32px; display: flex; flex-direction: column; gap: 20px; }
