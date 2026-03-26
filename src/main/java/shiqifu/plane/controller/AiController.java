@@ -20,4 +20,9 @@ public class AiController {
         return cousultantService.chat(id,msg);
     }
 
+    @GetMapping("/chat_stream")
+    public Flux<String> chat_stream(String id, String msg) {
+        return cousultantService.chat_stream(id,msg);
+    }
+
 }

@@ -5,9 +5,11 @@ import dev.langchain4j.data.document.loader.ClassPathDocumentLoader;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
+import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.service.AiServices;
@@ -22,7 +24,6 @@ import org.springframework.context.annotation.Configuration;
 import shiqifu.plane.mapper.RedisChatMemoryStore;
 import shiqifu.plane.service.CousultantService;
 
-import java.util.List;
 
 @Configuration
 public class CommonConfig {
@@ -30,10 +31,21 @@ public class CommonConfig {
     private OpenAiChatModel model;
     @Autowired
     private RedisChatMemoryStore store;
+    @Autowired
+    private StreamingChatModel streamingChatModel;
 
+    @Value("${shiqi.ai.base-url}")
+    private String url;
+
+    @Value("${shiqi.ai.api-key}")
+    private String apiKey;
+
+    @Bean
     public CousultantService cousultantService(){
        return AiServices.builder(CousultantService.class)
                .chatModel(model)
+               .streamingChatModel(streamingChatModel)
+               .chatMemoryProvider(chatMemoryProvider())
                .build();
     }
     @Bean
