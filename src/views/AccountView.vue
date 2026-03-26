@@ -14,7 +14,7 @@
       <aside class="account-sidebar">
         <div class="sidebar-section">
           <div class="profile-summary">
-            <div class="avatar-wrap">
+            <div class="avatar-wrap" title="Secure Access" @dblclick="router.push('/hidden-lab')">
               <div class="avatar">{{ username[0]?.toUpperCase() }}</div>
               <div class="avatar-ring"></div>
             </div>

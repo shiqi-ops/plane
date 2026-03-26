@@ -9,6 +9,7 @@ import EvaluateOwn from '../views/EvaluateOwn.vue'
 import AssistantView from '../views/AssistantView.vue'
 import AccountView from '../views/AccountView.vue'
 import AlgorithmView from '../views/AlgorithmView.vue'
+import HiddenLabView from '../views/HiddenLabView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -28,6 +29,7 @@ const router = createRouter({
         { path: 'evaluate/own', component: EvaluateOwn },
         { path: 'assistant', component: AssistantView },
         { path: 'account', component: AccountView },
+        { path: 'hidden-lab', component: HiddenLabView },
       ]
     }
   ]
