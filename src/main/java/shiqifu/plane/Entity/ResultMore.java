@@ -33,4 +33,16 @@ public class ResultMore {
 
     @SerializedName("robust_level")
     private String robustLevel;
+
+    @SerializedName("robustness_curve")
+    private String robustnessCurve;
+
+    @SerializedName("attack_bar")
+    private String attackBar;
+
+    @SerializedName("attack_heatmap")
+    private String attackHeatmap;
+
+    @SerializedName("attack_bubble")
+    private String attackBubble;
 }

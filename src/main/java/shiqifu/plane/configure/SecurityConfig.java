@@ -1,5 +1,6 @@
 package shiqifu.plane.configure;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.Customizer;
@@ -28,9 +30,7 @@ import shiqifu.plane.handle.LogoutHandle;
 import shiqifu.plane.util.JwtUtil;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Configuration
@@ -74,6 +74,8 @@ public class SecurityConfig {
                         author->{
                             author.requestMatchers("/auth/login").permitAll()
                                     .requestMatchers("/auth/register").permitAll()
+                                    .requestMatchers("/auth/send").permitAll()
+                                    .requestMatchers("/auth/update").permitAll()
                                     .anyRequest().authenticated();
                         }
                 )
@@ -96,18 +98,33 @@ public class SecurityConfig {
             try {
                 username=jwtUtil.extractUsername(jwt);
                 if(username!=null&& SecurityContextHolder.getContext().getAuthentication()==null){
-                    List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-                    UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username,
-                            null,
-                            authorities);
-                    SecurityContextHolder.getContext().setAuthentication(token);
+                    if(jwtUtil.isTokenValid(jwt,username)){
+                        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+                        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username,
+                                null,
+                                authorities);
+                        SecurityContextHolder.getContext().setAuthentication(token);
+                    }else{
+                        handleAuthenticationFailure(response, "Token 无效");
+                        return;
+                    }
                 }
             }
             catch(Exception e) {
-                log.info(e.getMessage());
+                log.warn("JWT Authentication failed: {}", e.getMessage());
+                handleAuthenticationFailure(response,"Token 已过期或无效");
                 SecurityContextHolder.clearContext();
+                return;
             }
             filterChain.doFilter(request,response);
         }
+    }
+    private void handleAuthenticationFailure(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType("application/json;charset=UTF-8");
+        Map<String, Object> error = new HashMap<>();
+        error.put("code", 401);
+        error.put("message", message);
+        response.getWriter().write(new ObjectMapper().writeValueAsString(error));
     }
 }

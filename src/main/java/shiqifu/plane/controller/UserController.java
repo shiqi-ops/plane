@@ -6,8 +6,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import shiqifu.plane.Entity.UpdatePasswordDTO;
 import shiqifu.plane.Entity.User;
 import shiqifu.plane.Entity.UserLoginDTO;
+import shiqifu.plane.exception.PasswordErrorException;
+import shiqifu.plane.exception.VerificationCodeErrorException;
+import shiqifu.plane.exception.VerificationCodeNullException;
 import shiqifu.plane.service.impl.UserServiceImpl;
 import shiqifu.plane.util.JwtUtil;
 
@@ -25,7 +29,7 @@ public class UserController {
     @Autowired
     private PasswordEncoder passwordEncoder;
     @PostMapping("/login")
-    public Map<String,String> login(@RequestBody UserLoginDTO userLoginDTO){
+    public Map<String,String> login(@RequestBody UserLoginDTO userLoginDTO) throws PasswordErrorException {
         log.info("登录");
         String username=userLoginDTO.getUsername();
         String password=userLoginDTO.getPassword();
@@ -36,7 +40,7 @@ public class UserController {
             throw new UsernameNotFoundException(e.getMessage());
         }
         if(!passwordEncoder.matches(password,userDetails.getPassword())){
-            throw new RuntimeException("用户名或密码错误");
+            throw new PasswordErrorException("用户名或密码错误");
         }
         Map<String,Object> claims=new HashMap<>();
         claims.put("role","admin");
@@ -49,5 +53,14 @@ public class UserController {
     @PostMapping("/register")
     public void register(@RequestBody User user){
         userService.save(user);
+    }
+
+    @PostMapping("/send")
+    public void send(String email){
+        userService.send(email);
+    }
+    @PostMapping("/update")
+    public void update(@RequestBody UpdatePasswordDTO updatePasswordDTO) throws VerificationCodeErrorException, VerificationCodeNullException {
+        userService.updatePassword(updatePasswordDTO);
     }
 }
