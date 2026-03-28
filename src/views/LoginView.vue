@@ -337,26 +337,26 @@ async function handleLogin() {
     return
   }
 
-  localStorage.setItem('token', 'mock-token')
-  localStorage.setItem('username', form.value.username)
-  router.push('/home')
-  return
+  // localStorage.setItem('token', 'mock-token')
+  // localStorage.setItem('username', form.value.username)
+  // router.push('/home')
+  // return
 
-  // loading.value = true
-  // try {
-  //   const res = await api.post('/auth/login', {
-  //     username: form.value.username,
-  //     password: form.value.password,
-  //   })
-  //   // 后端返回 { token: '...', username: '...' }
-  //   localStorage.setItem('token', res.data.token)
-  //   localStorage.setItem('username', res.data.username ?? form.value.username)
-  //   router.push('/home')
-  // } catch (e) {
-  //   error.value = e.response?.data?.message ?? '用户名或密码错误'
-  // } finally {
-  //   loading.value = false
-  // }
+  loading.value = true
+  try {
+    const res = await api.post('/auth/login', {
+      username: form.value.username,
+      password: form.value.password,
+    })
+    // 后端返回 { token: '...', username: '...' }
+    localStorage.setItem('token', res.data.token)
+    localStorage.setItem('username', res.data.username ?? form.value.username)
+    router.push('/home')
+  } catch (e) {
+    error.value = e.response?.data?.message ?? '用户名或密码错误'
+  } finally {
+    loading.value = false
+  }
 }
 
 // ── 注册 ──────────────────────────────────────

@@ -211,32 +211,35 @@ const attackGroups = [
   { label: '强攻击评测', value: 'strong', attacks: ['CW', 'DeepFool', 'AutoAttack'], color: '#f43f5e' },
 ]
 
-const reportId = computed(() => 'BCH' + Date.now().toString().slice(-8))
-const reportDate = computed(() => new Date().toLocaleString('zh-CN'))
+// const reportId = computed(() => 'BCH' + Date.now().toString().slice(-8))
+// const reportDate = computed(() => new Date().toLocaleString('zh-CN'))
+const reportId = ref('') 
+const reportDate = ref('') 
 
 const form = ref({ model: '', attack_group: '' })
 const loading = ref(false)
-const result = ref({
-  model: 'ResNet18',
-  dataset: 'drone_dataset',
-  dataset_size: 1000,
-  clean_accuracy: 0.7068,
-  robust_score: 45.82,
-  robust_level: 'C',
-  attack_results: [
-    { attack: 'FGSM', clean_accuracy: 0.7068, adv_accuracy: 0.3521, accuracy_drop: 0.3547, attack_success_rate: 0.5018 },
-    { attack: 'RFGSM', clean_accuracy: 0.7068, adv_accuracy: 0.3105, accuracy_drop: 0.3963, attack_success_rate: 0.5607 },
-    { attack: 'FFGSM', clean_accuracy: 0.7068, adv_accuracy: 0.3842, accuracy_drop: 0.3226, attack_success_rate: 0.4564 }
-  ],
-  ranking: [
-    { attack: 'RFGSM', attack_success_rate: 0.5607 },
-    { attack: 'FGSM', attack_success_rate: 0.5018 },
-    { attack: 'FFGSM', attack_success_rate: 0.4564 }
-  ],
-  bar_path: 'mock_bar.png',
-  curve_path: 'mock_curve.png',
-  heatmap_path: 'mock_heatmap.png'
-})
+const result = ref(null)
+// const result = ref({
+//   model: 'ResNet18',
+//   dataset: 'drone_dataset',
+//   dataset_size: 1000,
+//   clean_accuracy: 0.7068,
+//   robust_score: 45.82,
+//   robust_level: 'C',
+//   attack_results: [
+//     { attack: 'FGSM', clean_accuracy: 0.7068, adv_accuracy: 0.3521, accuracy_drop: 0.3547, attack_success_rate: 0.5018 },
+//     { attack: 'RFGSM', clean_accuracy: 0.7068, adv_accuracy: 0.3105, accuracy_drop: 0.3963, attack_success_rate: 0.5607 },
+//     { attack: 'FFGSM', clean_accuracy: 0.7068, adv_accuracy: 0.3842, accuracy_drop: 0.3226, attack_success_rate: 0.4564 }
+//   ],
+//   ranking: [
+//     { attack: 'RFGSM', attack_success_rate: 0.5607 },
+//     { attack: 'FGSM', attack_success_rate: 0.5018 },
+//     { attack: 'FFGSM', attack_success_rate: 0.4564 }
+//   ],
+//   bar_path: 'mock_bar.png',
+//   curve_path: 'mock_curve.png',
+//   heatmap_path: 'mock_heatmap.png'
+// })
 
 const canSubmit = computed(() => form.value.model && form.value.attack_group)
 

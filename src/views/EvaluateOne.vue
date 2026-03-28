@@ -244,20 +244,20 @@ const reportId = computed(() => 'RPT' + Date.now().toString().slice(-8))
 const reportDate = computed(() => new Date().toLocaleString('zh-CN'))
 const form = ref({ model: '', attack: '', eps: 0.03 })
 const loading = ref(false)
-// const result = ref(null)
-const result = ref({
-  model: 'ResNet18',
-  dataset: 'drone_dataset',
-  attack: 'FGSM',
-  eps: 0.03,
-  clean_accuracy: 0.7068,
-  adv_accuracy: 0.2308,
-  accuracy_drop: 0.4760,
-  robust_score: 0.3265,
-  robust_level: 'D',
-  curve_path: 'mock_curve.png',    // 模拟图片路径
-  compare_path: 'mock_compare.png',
-})
+const result = ref(null)
+// const result = ref({
+//   model: 'ResNet18',
+//   dataset: 'drone_dataset',
+//   attack: 'FGSM',
+//   eps: 0.03,
+//   clean_accuracy: 0.7068,
+//   adv_accuracy: 0.2308,
+//   accuracy_drop: 0.4760,
+//   robust_score: 0.3265,
+//   robust_level: 'D',
+//   curve_path: 'mock_curve.png',    // 模拟图片路径
+//   compare_path: 'mock_compare.png',
+// })
 function gradeDesc(level) {
   const map = {
     'A': '模型鲁棒性优秀，具备较强对抗攻击能力',
