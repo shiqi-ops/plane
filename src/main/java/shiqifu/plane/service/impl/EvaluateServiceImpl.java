@@ -1,16 +1,10 @@
 package shiqifu.plane.service.impl;
 
-import com.lowagie.text.*;
 import com.google.gson.Gson;
-import com.lowagie.text.Chunk;
-import com.lowagie.text.Document;
-import com.lowagie.text.Font;
-import com.lowagie.text.pdf.BaseFont;
-import com.lowagie.text.pdf.PdfWriter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import shiqifu.plane.Entity.Result;
-import shiqifu.plane.Entity.ResultMore;
+import shiqifu.plane.entity.entity.Result;
+import shiqifu.plane.entity.entity.ResultMore;
 import shiqifu.plane.util.PdfUtil;
 
 import java.io.*;
@@ -20,7 +14,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @Service

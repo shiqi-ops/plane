@@ -10,8 +10,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import shiqifu.plane.Entity.UpdatePasswordDTO;
-import shiqifu.plane.Entity.User;
+import shiqifu.plane.entity.dto.UpdatePasswordDTO;
+import shiqifu.plane.entity.entity.User;
 import shiqifu.plane.exception.VerificationCodeErrorException;
 import shiqifu.plane.exception.VerificationCodeNullException;
 import shiqifu.plane.mapper.UserMapper;
@@ -19,7 +19,6 @@ import shiqifu.plane.mapper.UserMapper;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Random;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Service

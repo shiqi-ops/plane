@@ -3,8 +3,12 @@ package shiqifu.plane.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import shiqifu.plane.Entity.*;
 import shiqifu.plane.annotation.NeedDownloadModel;
+import shiqifu.plane.entity.dto.EvaluateDTO;
+import shiqifu.plane.entity.dto.EvaluateMoreDTO;
+import shiqifu.plane.entity.dto.EvaluateOwnDTO;
+import shiqifu.plane.entity.entity.Result;
+import shiqifu.plane.entity.entity.ResultMore;
 import shiqifu.plane.service.impl.EvaluateServiceImpl;
 
 @RestController
@@ -66,5 +70,4 @@ public class EvaluateController {
             throw new RuntimeException("评估失败: " + e.getMessage());
         }
     }
-
 }

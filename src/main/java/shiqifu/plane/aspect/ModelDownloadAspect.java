@@ -8,7 +8,7 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
-import shiqifu.plane.Entity.EvaluateOwnDTO;
+import shiqifu.plane.entity.dto.EvaluateOwnDTO;
 import shiqifu.plane.annotation.NeedDownloadModel;
 
 import java.io.File;

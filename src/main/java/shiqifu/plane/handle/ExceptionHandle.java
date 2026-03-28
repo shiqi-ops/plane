@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.ServletWebRequest;
 import shiqifu.plane.exception.PasswordErrorException;
 import shiqifu.plane.exception.VerificationCodeErrorException;
 import shiqifu.plane.exception.VerificationCodeNullException;

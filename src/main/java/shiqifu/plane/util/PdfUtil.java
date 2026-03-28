@@ -3,13 +3,12 @@ package shiqifu.plane.util;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.BaseFont;
 import com.lowagie.text.pdf.PdfWriter;
-import shiqifu.plane.Entity.AttackResult;
-import shiqifu.plane.Entity.Result;
-import shiqifu.plane.Entity.ResultMore;
+import shiqifu.plane.entity.entity.AttackResult;
+import shiqifu.plane.entity.entity.Result;
+import shiqifu.plane.entity.entity.ResultMore;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 

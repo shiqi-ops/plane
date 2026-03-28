@@ -1,4 +1,4 @@
-package shiqifu.plane.Entity;
+package shiqifu.plane.entity.dto;
 
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;

@@ -1,4 +1,4 @@
-package shiqifu.plane.Entity;
+package shiqifu.plane.entity.entity;
 
 
 import com.google.gson.annotations.SerializedName;
