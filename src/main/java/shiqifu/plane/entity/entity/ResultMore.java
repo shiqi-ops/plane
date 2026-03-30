@@ -1,6 +1,7 @@
 package shiqifu.plane.entity.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
@@ -45,4 +46,8 @@ public class ResultMore {
 
     @SerializedName("attack_bubble")
     private String attackBubble;
+
+    @SerializedName("download_url")
+    @JsonProperty("download_url")
+    private String downloadUrl;
 }

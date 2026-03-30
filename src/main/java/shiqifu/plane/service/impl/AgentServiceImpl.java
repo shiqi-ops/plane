@@ -32,7 +32,7 @@ public class AgentServiceImpl {
 
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("file", fileName,
+                .addFormDataPart("static/file", fileName,
                         RequestBody.create(fileBytes, MediaType.parse("image/jpeg")))
                 .build();
 

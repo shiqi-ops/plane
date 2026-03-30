@@ -10,8 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 import shiqifu.plane.entity.entity.AgentResult;
 import shiqifu.plane.service.impl.AgentServiceImpl;
 
-import java.io.File;
-
 @Slf4j
 @RestController
 @RequestMapping("/agent")
@@ -19,7 +17,7 @@ public class AgentController {
     @Autowired
     private AgentServiceImpl agentService;
     @PostMapping("/fast_api")
-    public AgentResult fast_api(@RequestParam("file") MultipartFile file) {
+    public AgentResult fast_api(@RequestParam("static/file") MultipartFile file) {
         log.info("fast_api开始了");
         try {
             AgentResult agentResult =agentService.fast_api(file);

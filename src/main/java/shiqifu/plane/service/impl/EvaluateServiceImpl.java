@@ -105,7 +105,7 @@ public class EvaluateServiceImpl {
         if(result==null){
             throw new RuntimeException("Python 脚本执行成功但未返回有效的 JSON 结果");
         }
-        PdfUtil.pdf(result);
+        result.setDownloadUrl(PdfUtil.pdf(result));
         return result;
     }
     public ResultMore more(String model, String attack_group, String dataset, String eps) throws IOException, InterruptedException{
@@ -187,7 +187,7 @@ public class EvaluateServiceImpl {
         if(result==null){
             throw new RuntimeException("Python 脚本执行成功但未返回有效的 JSON 结果");
         }
-        PdfUtil.pdf(result);
+        result.setDownloadUrl(PdfUtil.pdf(result));
         return result;
     }
     public Result own(String model_path,String attack,String dataset,String eps) throws IOException, InterruptedException{

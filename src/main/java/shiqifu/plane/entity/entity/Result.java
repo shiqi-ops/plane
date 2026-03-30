@@ -46,4 +46,8 @@ public class Result {
     @SerializedName("compare_path")
     @JsonProperty("compare_path")
     private String comparePath;
+
+    @SerializedName("download_url")
+    @JsonProperty("download_url")
+    private String downloadUrl;
 }

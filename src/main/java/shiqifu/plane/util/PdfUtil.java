@@ -13,17 +13,17 @@ import java.util.List;
 import java.util.UUID;
 
 public class PdfUtil {
-    private final static String path = "D:/java/xiaowebproject/mall/mall/tmp_dir/";
+    private final static String path = "D://java//xiaowebproject//mall//mall//plane//src//main//resources//static//file/";
     private final static String path1="D:/python/drone-robustness-platform/results/attack_bar.png";
     private final static String path2="D:/python/drone-robustness-platform/results/robustness_curve.png";
     private final static String path3="D:/python/drone-robustness-platform/results/attack_heatmap.png";
     private final static String path4="D:/python/drone-robustness-platform/results/attack_bubble.png";
-    public static void pdf(Result result) throws IOException {
+    public static String pdf(Result result) throws IOException {
 
         Document doc = new Document();
 
-
-        String fileName = path + UUID.randomUUID().toString() + ".pdf";
+        String random=UUID.randomUUID().toString();
+        String fileName = path + random + ".pdf";
         PdfWriter.getInstance(doc, new FileOutputStream(fileName));
         doc.open();
 
@@ -167,13 +167,14 @@ public class PdfUtil {
         doc.add(content14);
 
         doc.close();
+        return "/"+random+".pdf";
     }
 
-    public static void pdf(ResultMore resultMore) throws IOException{
+    public static String pdf(ResultMore resultMore) throws IOException{
         Document doc = new Document();
 
-
-        String fileName = path + UUID.randomUUID().toString() + ".pdf";
+        String random=UUID.randomUUID().toString();
+        String fileName = path + random + ".pdf";
         PdfWriter.getInstance(doc, new FileOutputStream(fileName));
         doc.open();
 
@@ -308,5 +309,6 @@ public class PdfUtil {
         doc.add(image3);
 
         doc.close();
+        return "/"+random+".pdf";
     }
 }
