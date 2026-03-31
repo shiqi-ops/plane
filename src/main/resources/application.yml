@@ -1,7 +1,6 @@
 spring:
   web:
     resources:
-      static-locations: classpath:/static/file/
       add-mappings: true
   application:
      name: plane

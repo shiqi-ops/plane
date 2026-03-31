@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -42,12 +43,6 @@ public class SecurityConfig {
         this.authenticationEntryPoint = authenticationEntryPoint;
     }
     @Bean
-    public WebSecurityCustomizer  webSecurityCustomizer() {
-        return (web) -> web.ignoring()
-                .requestMatchers("/static/file/**")
-                .requestMatchers("/**/*.pdf", "/**/*.jpg", "/**/*.png", "/**/*.jpeg");
-    }
-    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
@@ -75,7 +70,7 @@ public class SecurityConfig {
                 .formLogin(formLogin -> formLogin.disable())
                 .authorizeHttpRequests(
                         author->{
-                            author.requestMatchers("/static/file/**").permitAll()
+                            author.requestMatchers("/file/**").permitAll()
                                     .requestMatchers("/auth/login").permitAll()
                                     .requestMatchers("/auth/register").permitAll()
                                     .requestMatchers("/auth/send").permitAll()
@@ -89,8 +84,27 @@ public class SecurityConfig {
         return http.build();
     }
     public class jwtAuthenticationFilter extends OncePerRequestFilter {
+        private final List<String> ALLOWED_PATHS = Arrays.asList(
+                "/auth/login",
+                "/auth/register",
+                "/auth/send",
+                "/auth/update"
+        );
+        private boolean isPathAllowed(String requestURI) {
+            if(ALLOWED_PATHS.contains(requestURI)){
+                return true;
+            }else if(requestURI.startsWith("/file/")){
+                return true;
+            }
+            return false;
+        }
         @Override
         protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+            String requestURI = request.getRequestURI();
+            if (isPathAllowed(requestURI)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
             final String authHeader = request.getHeader("Authorization");
             final String jwt;
             final String username;
