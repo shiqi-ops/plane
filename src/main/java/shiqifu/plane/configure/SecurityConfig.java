@@ -19,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -90,11 +91,12 @@ public class SecurityConfig {
                 "/auth/send",
                 "/auth/update"
         );
+        private final AntPathMatcher antPathMatcher = new AntPathMatcher();
         private boolean isPathAllowed(String requestURI) {
-            if(ALLOWED_PATHS.contains(requestURI)){
-                return true;
-            }else if(requestURI.startsWith("/file/")){
-                return true;
+            for(var path: ALLOWED_PATHS) {
+                if (antPathMatcher.match(path, requestURI)) {
+                    return true;
+                }
             }
             return false;
         }
@@ -109,7 +111,7 @@ public class SecurityConfig {
             final String jwt;
             final String username;
             if(authHeader==null || !authHeader.startsWith("Bearer ")){
-                filterChain.doFilter(request,response);
+                handleAuthenticationFailure(response, "未提供认证令牌");
                 return;
             }
             jwt=authHeader.substring(7);

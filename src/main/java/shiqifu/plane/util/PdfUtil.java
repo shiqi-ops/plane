@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class PdfUtil {
-    private final static String path = "D://java//xiaowebproject//mall//mall//plane//src//main//resources//static//file/";
+    private final static String path = "D:/java//xiaowebproject//mall//mall//tmp_dir/";
     private final static String path1="D:/python/drone-robustness-platform/results/attack_bar.png";
     private final static String path2="D:/python/drone-robustness-platform/results/robustness_curve.png";
     private final static String path3="D:/python/drone-robustness-platform/results/attack_heatmap.png";

@@ -19,7 +19,7 @@ import java.util.UUID;
 @Aspect
 @Component
 public class ModelDownloadAspect {
-    private final String tmp_dir="D://java//xiaowebproject//mall//mall//plane//src//main//resources//static//file/";
+    private final String tmp_dir="D:/java//xiaowebproject//mall//mall//tmp_dir/";
 
     @Pointcut("@annotation(shiqifu.plane.annotation.NeedDownloadModel)")
     public void downloadModelPointcut() {}
