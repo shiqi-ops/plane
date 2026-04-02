@@ -149,9 +149,20 @@
             </p>
           </div>
 
+          <!-- Bubble Chart -->
+          <div class="visual-block" v-if="result.bubble_path">
+            <div class="visual-label">2. 攻击效能气泡图 (Attack Efficiency Bubble Chart)</div>
+            <div class="visual-img-wrap">
+              <div ref="bubbleRef" style="width: 100%; height: 400px;"></div>
+            </div>
+            <p class="visual-desc">
+              气泡图综合展示了攻击成功率（纵轴）与准确率下降幅度（气泡大小）。气泡越高、越大，代表该攻击方法对当前无人机模型的破坏力越强。
+            </p>
+          </div>
+
           <!-- Robustness Curve -->
           <div class="visual-block" v-if="result.curve_path">
-            <div class="visual-label">2. 鲁棒性曲线 (Robustness Curve)</div>
+            <div class="visual-label">3. 鲁棒性曲线 (Robustness Curve)</div>
             <div class="visual-img-wrap">
               <img :src="imgUrl(result.curve_path)" alt="Robustness Curve" />
             </div>
@@ -162,7 +173,7 @@
 
           <!-- Heatmap -->
           <div class="visual-block" v-if="result.heatmap_path">
-            <div class="visual-label">3. 攻击热力图 (Heatmap)</div>
+            <div class="visual-label">4. 攻击热力图 (Heatmap)</div>
             <div class="visual-img-wrap">
               <img :src="imgUrl(result.heatmap_path)" alt="Heatmap" />
             </div>
@@ -192,10 +203,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../api/index.js'
-
+import * as echarts from 'echarts'
 const router = useRouter()
 
 const models = [
@@ -210,9 +221,187 @@ const attackGroups = [
   { label: '迁移攻击评测', value: 'transfer', attacks: ['MIFGSM', 'NIFGSM', 'DIFGSM'], color: '#a78bfa' },
   { label: '强攻击评测', value: 'strong', attacks: ['CW', 'DeepFool', 'AutoAttack'], color: '#f43f5e' },
 ]
+const bubbleRef = ref(null)
+let bubbleChart = null
+let t = 0
+let timer = null
+let baseData = []
 
-// const reportId = computed(() => 'BCH' + Date.now().toString().slice(-8))
-// const reportDate = computed(() => new Date().toLocaleString('zh-CN'))
+function renderBubbleChart() {
+  if (!bubbleRef.value || !result.value) return
+
+  // 初始化
+  if (!bubbleChart) {
+    bubbleChart = echarts.init(bubbleRef.value)
+  }
+
+  // ⭐ 横轴映射（category → index）
+  const xIndexMap = {
+    FGSM: 0,
+    FFGSM: 1,
+    RFGSM: 2
+  }
+
+  // ⭐ 基础数据（字段已修正）
+  baseData = result.value.attack_results.map((item, index) => ({
+    x: item.attack,
+    y: item.attack_success_rate,
+    size: item.attack_success_rate * 55, // 进一步加大，增强视觉冲击力
+    phase: index * Math.PI / 1.5
+  }))
+
+  const option = {
+    grid: { left: 40, right: 20, bottom: 40 },
+    animation: false,
+
+    xAxis: {
+      type: 'category',
+      data: ['FGSM', 'FFGSM', 'RFGSM'],
+      axisLine: { lineStyle: { color: '#333' } },
+      axisLabel: { color: '#666' },
+      axisTick: { lineStyle: { color: '#333' } }
+    },
+
+    yAxis: {
+      type: 'value',
+      min: 0.2,
+      max: 1.1,
+      interval: 0.1,
+      name: 'Attack Success Rate',
+      nameTextStyle: { color: '#666' },
+      axisLabel: { color: '#666' },
+      axisTick: { lineStyle: { color: '#333' } },
+      splitLine: { 
+        show: true,
+        lineStyle: { color: '#1e2530' } 
+      }
+    },
+
+    series: [
+      {
+        type: 'custom',
+        coordinateSystem: 'cartesian2d',
+
+        renderItem: (params, api) => {
+          const point = api.coord([api.value(0), api.value(1)])
+          const size = api.value(2)
+
+          return {
+            type: 'group',
+            children: [
+              // 1. 底层虹彩晕（增强肥皂泡的幻彩氛围）
+              {
+                type: 'circle',
+                shape: { cx: point[0], cy: point[1], r: size * 1.1 },
+                style: {
+                  fill: 'transparent',
+                  shadowBlur: 35,
+                  shadowColor: 'rgba(150, 180, 255, 0.4)', // 强化外围蓝色晕
+                }
+              },
+              // 2. 主体肥皂泡（极高饱和度虹彩边缘）
+              {
+                type: 'circle',
+                shape: { cx: point[0], cy: point[1], r: size },
+                style: {
+                  fill: new echarts.graphic.RadialGradient(0.4, 0.3, 1, [ // 偏移中心点，模拟受光面
+                    { offset: 0, color: 'rgba(255, 255, 255, 0)' },      // 核心透明
+                    { offset: 0.6, color: 'rgba(255, 255, 255, 0.05)' }, // 极浅的白色底膜
+                    { offset: 0.85, color: '#00ffff' },                 // 青色 (改为不透明或高饱和)
+                    { offset: 0.92, color: '#ff00ff' },                 // 品红
+                    { offset: 0.98, color: '#ffff00' },                 // 黄色
+                    { offset: 1, color: '#00ff64' }                     // 翠绿边缘
+                  ]),
+                  stroke: 'rgba(255, 255, 255, 0.8)', 
+                  lineWidth: 2,
+                  // 关键：增加外发光，让颜色“溢出”气泡边缘
+                  shadowBlur: 20,
+                  shadowColor: 'rgba(0, 255, 255, 0.5)' 
+                }
+              },
+              // 在 children 数组中再加一个圆，放在彩虹层下面
+              {
+                type: 'circle',
+                shape: { cx: point[0], cy: point[1], r: size },
+                style: {
+                  fill: 'rgba(255, 255, 255, 0.03)', // 极淡的白膜，防止气泡完全“空洞”
+                  stroke: 'rgba(255, 255, 255, 0.2)',
+                  lineWidth: 1
+                }
+              },
+              // 3. 顶部弧形高光（增强质感反射）
+              {
+                type: 'arc',
+                shape: {
+                  cx: point[0], cy: point[1],
+                  r: size * 0.82,
+                  startAngle: -Math.PI * 0.75,
+                  endAngle: -Math.PI * 0.25,
+                  clockwise: true
+                },
+                // 修改那个 type: 'arc' 的部分
+                style: {
+                  stroke: '#fff', // 纯白
+                  lineWidth: 4,   // 加粗
+                  lineCap: 'round',
+                  shadowBlur: 10,
+                  shadowColor: '#fff'
+                }
+              },
+              // 4. 次高亮圆点（反射环境光）
+              {
+                type: 'circle',
+                shape: { 
+                  cx: point[0] + size * 0.45, 
+                  cy: point[1] + size * 0.45, 
+                  r: size * 0.22 
+                },
+                style: {
+                  fill: new echarts.graphic.RadialGradient(0.5, 0.5, 1, [
+                    { offset: 0, color: 'rgba(255, 255, 255, 0.6)' },
+                    { offset: 1, color: 'rgba(255, 255, 255, 0)' }
+                  ])
+                }
+              }
+            ]
+          }
+        },
+
+        // ⭐ 初始数据（必须用 index）
+        data: baseData.map(d => [
+          xIndexMap[d.x],
+          d.y,
+          d.size
+        ])
+      }
+    ]
+  }
+
+  bubbleChart.setOption(option)
+
+  // ⭐ 清除旧动画
+  if (timer) clearInterval(timer)
+
+  // ⭐ 浮动动画
+  timer = setInterval(() => {
+    t += 0.04
+
+    bubbleChart.setOption({
+      series: [
+        {
+          data: baseData.map(d => [
+            xIndexMap[d.x],
+            d.y + Math.sin(t + d.phase) * 0.012, // 保持优雅浮动
+            d.size
+          ])
+        }
+      ]
+    }, { silent: true })
+  }, 16)
+}
+
+//const reportId = computed(() => 'BCH' + Date.now().toString().slice(-8))
+//const reportDate = computed(() => new Date().toLocaleString('zh-CN'))
 const reportId = ref('') 
 const reportDate = ref('') 
 
@@ -237,8 +426,9 @@ const result = ref(null)
 //     { attack: 'FFGSM', attack_success_rate: 0.4564 }
 //   ],
 //   bar_path: 'mock_bar.png',
-//   curve_path: 'mock_curve.png',
-//   heatmap_path: 'mock_heatmap.png'
+//     bubble_path: 'mock_bubble.png',
+//     curve_path: 'mock_curve.png',
+//     heatmap_path: 'mock_heatmap.png'
 // })
 
 const canSubmit = computed(() => form.value.model && form.value.attack_group)
@@ -279,6 +469,18 @@ async function handleSubmit() {
     loading.value = false
   }
 }
+
+watch(result, async (val) => {
+  if (val) {
+    await nextTick()
+    renderBubbleChart()
+  }
+})
+onMounted(() => {
+  if (result.value) {
+    renderBubbleChart()
+  }
+})
 </script>
 
 <style scoped>
@@ -556,6 +758,11 @@ async function handleSubmit() {
   font-size: 0.65rem;
   color: #374151;
   letter-spacing: 0.1em;
+}
+/* 修改 CSS */
+.visual-img-wrap {
+  background: radial-gradient(circle at center, #1a1f26 0%, #080a0d 100%);
+  /* 或者加一个深蓝色的微光，能衬托出气泡的青色和紫色 */
 }
 
 @media (max-width: 900px) {

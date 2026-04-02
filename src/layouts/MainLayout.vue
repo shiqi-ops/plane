@@ -21,7 +21,7 @@
 
     <!-- 悬浮机器人 GIF 入口 -->
     <div class="bot-trigger" @click="showBot = true">
-      <img src="/芙宁娜.gif" alt="AI Assistant" />
+      <img src="/bot-trigger.jpg" alt="AI Assistant" />
       <div class="bot-tooltip">有问题问我</div>
     </div>
 
@@ -179,14 +179,19 @@ main { flex: 1; display: flex; flex-direction: column; }
   position: fixed;
   right: 24px;
   bottom: 24px;
-  width: 100px;
-  height:100px;
+  width: 120px;
+  height:120px;
   cursor: pointer;
   z-index: 1000;
   transition: transform 0.2s;
 }
 .bot-trigger:hover { transform: scale(1.1); }
-.bot-trigger img { width: 100%; height: 100%; object-fit: contain; }
+.bot-trigger img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* ⚠️ 改成 cover，保证填满圆形 */
+  border-radius: 50%; /* ⭐ 核心：变圆 */
+}
 
 .bot-tooltip {
   position: absolute;

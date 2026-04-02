@@ -4,75 +4,28 @@
     <!-- ── Hero ── -->
     <section class="hero">
 
-      <!-- 背景层 -->
+      <!-- 全屏背景层 -->
       <div class="hero-bg">
+        <!-- 轮播图占据整个背景 -->
+        <div class="hero-carousel-full">
+          <div class="carousel-track" :style="{ transform: `translateX(-${currentSlide * 100}%)` }">
+            <div v-for="(img, idx) in carouselImages" :key="idx" class="slide">
+              <img :src="img" alt="Drone View" />
+              <!-- 核心：多重渐变叠加，实现从左下角文字区向背景图片的平滑过渡 -->
+              <div class="slide-overlay-complex"></div>
+            </div>
+          </div>
+          
+          <!-- 轮播指示器 -->
+          <div class="carousel-dots">
+            <span v-for="(_, idx) in carouselImages" :key="idx" 
+                  class="dot" :class="{ active: currentSlide === idx }"
+                  @click="currentSlide = idx"></span>
+          </div>
+        </div>
+
         <div class="bg-grid"></div>
-
-        <!-- 主雷达 -->
-        <div class="radar">
-          <svg class="radar-svg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
-            <!-- 同心圆 -->
-            <circle cx="250" cy="250" r="60"  fill="none" stroke="rgba(245,158,11,0.12)" stroke-width="1"/>
-            <circle cx="250" cy="250" r="110" fill="none" stroke="rgba(245,158,11,0.10)" stroke-width="1"/>
-            <circle cx="250" cy="250" r="160" fill="none" stroke="rgba(245,158,11,0.08)" stroke-width="1"/>
-            <circle cx="250" cy="250" r="210" fill="none" stroke="rgba(245,158,11,0.06)" stroke-width="1"/>
-            <circle cx="250" cy="250" r="245" fill="none" stroke="rgba(245,158,11,0.04)" stroke-width="1"/>
-            <!-- 十字线 -->
-            <line x1="5"   y1="250" x2="495" y2="250" stroke="rgba(245,158,11,0.08)" stroke-width="0.8"/>
-            <line x1="250" y1="5"   x2="250" y2="495" stroke="rgba(245,158,11,0.08)" stroke-width="0.8"/>
-            <!-- 斜线 -->
-            <line x1="77"  y1="77"  x2="423" y2="423" stroke="rgba(245,158,11,0.05)" stroke-width="0.6"/>
-            <line x1="423" y1="77"  x2="77"  y2="423" stroke="rgba(245,158,11,0.05)" stroke-width="0.6"/>
-            <!-- 扫描扇形 -->
-            <g class="radar-sweep">
-              <path d="M250,250 L250,40 A210,210 0 0,1 460,250 Z"
-                fill="url(#sweep-grad)" opacity="0.5"/>
-            </g>
-            <defs>
-              <radialGradient id="sweep-grad" cx="0%" cy="50%" r="100%">
-                <stop offset="0%"   stop-color="#f59e0b" stop-opacity="0.0"/>
-                <stop offset="70%"  stop-color="#f59e0b" stop-opacity="0.04"/>
-                <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.18"/>
-              </radialGradient>
-            </defs>
-            <!-- 中心点 -->
-            <circle cx="250" cy="250" r="5" fill="#f59e0b" opacity="0.8"/>
-            <circle cx="250" cy="250" r="10" fill="none" stroke="#f59e0b" stroke-width="1" opacity="0.4"/>
-            <!-- 目标点 -->
-            <circle cx="320" cy="160" r="4" fill="#f59e0b" opacity="0.9" class="blip b1"/>
-            <circle cx="320" cy="160" r="12" fill="none" stroke="#f59e0b" stroke-width="0.8" opacity="0.5" class="blip-ring r1"/>
-            <circle cx="180" cy="300" r="3" fill="#06b6d4" opacity="0.8" class="blip b2"/>
-            <circle cx="180" cy="300" r="10" fill="none" stroke="#06b6d4" stroke-width="0.8" opacity="0.5" class="blip-ring r2"/>
-            <circle cx="350" cy="310" r="3" fill="#f43f5e" opacity="0.7" class="blip b3"/>
-          </svg>
-        </div>
-
-        <!-- 脉冲扩散圆 -->
-        <div class="pulse-rings">
-          <div class="pulse-ring" style="animation-delay:0s"></div>
-          <div class="pulse-ring" style="animation-delay:2s"></div>
-          <div class="pulse-ring" style="animation-delay:4s"></div>
-        </div>
-
-        <!-- 漂浮六边形 -->
-        <div class="hex-field">
-          <span class="hex" v-for="h in hexes" :key="h.id"
-            :style="{
-              top: h.top, right: h.right, left: h.left,
-              fontSize: h.size, animationDelay: h.delay,
-              opacity: h.opacity
-            }">⬡</span>
-        </div>
-
-        <!-- 数据流竖线 -->
-        <div class="data-streams">
-          <div class="stream" v-for="s in streams" :key="s.id"
-            :style="{ left: s.left, animationDelay: s.delay, height: s.height }"></div>
-        </div>
-
         <div class="scan-h"></div>
-        <div class="vignette-left"></div>
-        <div class="vignette-bottom"></div>
       </div>
 
       <!-- 文字内容 -->
@@ -158,39 +111,46 @@
 
       <div class="scenario-grid">
         <div v-for="s in scenarios" :key="s.title" class="sc-card">
-          <div class="sc-top">
-            <span class="sc-icon" :style="{ color: s.color }">{{ s.icon }}</span>
-            <span class="sc-tag">{{ s.tag }}</span>
-          </div>
+          <!-- 背景图片层 -->
+          <div class="sc-card-bg" :style="{ backgroundImage: `url(${s.bg})` }"></div>
+          <!-- 渐变遮罩层，确保文字可读 -->
+          <div class="sc-card-overlay"></div>
           
-          <div class="sc-main">
-            <h3 class="sc-title">{{ s.title }}</h3>
-            <p class="sc-desc">{{ s.desc }}</p>
-          </div>
+          <div class="sc-content-wrap">
+            <div class="sc-top">
+              <span class="sc-icon" :style="{ color: s.color }">{{ s.icon }}</span>
+              <span class="sc-tag">{{ s.tag }}</span>
+            </div>
+            
+            <div class="sc-main">
+              <h3 class="sc-title">{{ s.title }}</h3>
+              <p class="sc-desc">{{ s.desc }}</p>
+            </div>
 
-          <div class="sc-info-grid">
-            <div class="sc-info-box">
-              <span class="sib-label">技术挑战</span>
-              <ul class="sib-list">
-                <li v-for="c in s.challenges" :key="c">{{ c }}</li>
-              </ul>
+            <div class="sc-info-grid">
+              <div class="sc-info-box">
+                <span class="sib-label">技术挑战</span>
+                <ul class="sib-list">
+                  <li v-for="c in s.challenges" :key="c">{{ c }}</li>
+                </ul>
+              </div>
+              <div class="sc-info-box">
+                <span class="sib-label">安全风险</span>
+                <ul class="sib-list">
+                  <li v-for="r in s.risks" :key="r">{{ r }}</li>
+                </ul>
+              </div>
             </div>
-            <div class="sc-info-box">
-              <span class="sib-label">安全风险</span>
-              <ul class="sib-list">
-                <li v-for="r in s.risks" :key="r">{{ r }}</li>
-              </ul>
-            </div>
-          </div>
 
-          <div class="sc-footer">
-            <div class="sc-role">
-              <span class="scr-label">系统作用：</span>
-              <span class="scr-val">{{ s.role }}</span>
-            </div>
-            <div class="sc-value">
-              <span class="scv-label">应用价值：</span>
-              <span class="scv-val">{{ s.value }}</span>
+            <div class="sc-footer">
+              <div class="sc-role">
+                <span class="scr-label">系统作用：</span>
+                <span class="scr-val">{{ s.role }}</span>
+              </div>
+              <div class="sc-value">
+                <span class="scv-label">应用价值：</span>
+                <span class="scv-val">{{ s.value }}</span>
+              </div>
             </div>
           </div>
 
@@ -237,7 +197,32 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted } from 'vue'
 const router = useRouter()
+
+const carouselImages = [
+  '/004.jpg',
+  '/003.jpg',
+  '/002.jpg',
+  '/001.jpg'
+]
+
+const currentSlide = ref(0)
+let timer = null
+
+const startCarousel = () => {
+  timer = setInterval(() => {
+    currentSlide.value = (currentSlide.value + 1) % carouselImages.length
+  }, 4000)
+}
+
+onMounted(() => {
+  startCarousel()
+})
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
 
 const metrics = [
   { num: '3',   label: '可用模型' },
@@ -302,6 +287,7 @@ const features = [
 const scenarios = [
   { 
     icon: '◉', tag: 'MILITARY', color: '#f59e0b', title: '军事侦察',
+    bg: '/005.jpg',
     desc: '承担前沿侦察、战场监视等关键任务，深度依赖视觉模型识别目标。',
     challenges: ['光照剧烈变化', '目标伪装与欺骗', '毫秒级实时响应'],
     risks: ['对抗攻击导致识别错误', '微小扰动引发模型误判'],
@@ -310,6 +296,7 @@ const scenarios = [
   },
   { 
     icon: '◎', tag: 'LOGISTICS', color: '#06b6d4', title: '物流配送',
+    bg: '/006.jpg',
     desc: '在城市末端物流中，依靠视觉完成路径识别、投递点定位等。',
     challenges: ['高楼遮挡与信号波动', '动态行人/车辆干扰', '降落点识别高度依赖'],
     risks: ['对抗扰动导致路径规划错误', '投递点识别失败'],
@@ -318,6 +305,7 @@ const scenarios = [
   },
   { 
     icon: '◈', tag: 'AUTONOMOUS', color: '#a78bfa', title: '车载自动驾驶',
+    bg: '/007.jpg',
     desc: '核心的安全关键系统，处理行人识别、交通标志及障碍物检测。',
     challenges: ['全天候多场景适应', '极高精度与实时性', '长尾极端工况覆盖'],
     risks: ['交通标志识别错误', '行人检测失败导致安全事故'],
@@ -326,6 +314,7 @@ const scenarios = [
   },
   { 
     icon: '⬡', tag: 'SECURITY', color: '#f43f5e', title: '园区安防',
+    bg: '/008.jpg',
     desc: '应用于智慧园区监控与边境巡逻，实现实时监控与异常行为分析。',
     challenges: ['长时间稳定运行', '复杂背景下的异常识别', '昼夜光影剧烈变化'],
     risks: ['恶意者利用对抗样本绕过检测', '误判导致漏检/误报'],
@@ -358,116 +347,95 @@ const scenarios = [
 .bg-grid {
   position: absolute; inset: 0;
   background-image:
-    linear-gradient(rgba(30,37,48,0.6) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(30,37,48,0.6) 1px, transparent 1px);
+    linear-gradient(rgba(30,37,48,0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30,37,48,0.3) 1px, transparent 1px);
   background-size: 56px 56px;
-}
-
-/* 雷达 */
-.radar {
-  position: absolute;
-  right: 4%;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 520px;
-  height: 520px;
-}
-.radar-svg { width: 100%; height: 100%; overflow: visible; }
-
-.radar-sweep {
-  transform-origin: 250px 250px;
-  animation: sweep 4s linear infinite;
-}
-@keyframes sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-.blip { animation: blip-pulse 2s ease-in-out infinite; }
-.b1 { animation-delay: 0s; }
-.b2 { animation-delay: 0.7s; }
-.b3 { animation-delay: 1.4s; }
-@keyframes blip-pulse { 0%,100%{opacity:0.3;r:3} 50%{opacity:1;r:5} }
-
-.blip-ring { animation: ring-fade 2s ease-out infinite; }
-.r1 { animation-delay: 0s; }
-.r2 { animation-delay: 0.7s; }
-@keyframes ring-fade {
-  0%   { r: 8;  opacity: 0.8; }
-  100% { r: 22; opacity: 0; }
-}
-
-/* 脉冲圆 */
-.pulse-rings {
-  position: absolute;
-  right: calc(4% + 210px);
-  top: 50%;
-  transform: translate(50%, -50%);
   pointer-events: none;
+  z-index: 0; /* ⭐ 核心：移到最底层，不再挡住图片 */
 }
-.pulse-ring {
+
+/* 全屏轮播图样式 */
+.hero-carousel-full {
   position: absolute;
-  width: 40px; height: 40px;
-  border: 1px solid rgba(245,158,11,0.5);
+  inset: 0;
+  z-index: 1; /* ⭐ 核心：位于网格之上 */
+}
+
+.carousel-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide {
+  min-width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 核心：多重渐变叠加，实现从左下角文字区向背景图片的平滑过渡 */
+.slide-overlay-complex {
+  position: absolute;
+  inset: 0;
+  background: 
+    /* 1. 左侧深向右渐隐 (保护标题文字) */
+    linear-gradient(90deg, #0a0c0f 15%, rgba(10,12,15,0.8) 35%, transparent 60%),
+    /* 2. 底部向上渐隐 (保护左下角指标和页脚融合) */
+    linear-gradient(0deg, #0a0c0f 10%, rgba(10,12,15,0.5) 30%, transparent 50%),
+    /* 3. 左下角核心深色遮罩 (强化文字背景) */
+    radial-gradient(circle at 0% 100%, rgba(10,12,15,0.9) 0%, transparent 65%);
+}
+
+.carousel-dots {
+  position: absolute;
+  bottom: 40px;
+  right: 50px;
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  animation: pulse-expand 6s ease-out infinite;
-}
-@keyframes pulse-expand {
-  0%   { width:40px;  height:40px;  opacity:0.6; }
-  100% { width:560px; height:560px; opacity:0;   }
+  background: rgba(255,255,255,0.2);
+  cursor: pointer;
+  transition: all 0.3s;
 }
 
-/* 漂浮六边形 */
-.hex-field { position: absolute; inset: 0; }
-.hex {
-  position: absolute;
-  font-family: monospace;
-  color: #f59e0b;
-  animation: hex-float 14s ease-in-out infinite;
-  pointer-events: none;
-  line-height: 1;
+.dot.active {
+  background: #f59e0b;
+  transform: scale(1.2);
+  box-shadow: 0 0 15px rgba(245,158,11,0.6);
 }
-@keyframes hex-float {
-  0%,100% { transform: translateY(0) rotate(0deg); }
-  33%     { transform: translateY(-24px) rotate(8deg); }
-  66%     { transform: translateY(12px) rotate(-5deg); }
-}
-
-/* 数据流 */
-.data-streams { position: absolute; top: 0; right: 0; left: 0; bottom: 0; overflow: hidden; }
-.stream {
-  position: absolute;
-  top: -150px;
-  width: 1px;
-  background: linear-gradient(180deg, transparent 0%, rgba(245,158,11,0.4) 50%, transparent 100%);
-  animation: stream-fall 5s linear infinite;
-}
-@keyframes stream-fall { from { top: -150px; } to { top: 110%; } }
 
 /* 水平扫描线 */
 .scan-h {
   position: absolute; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(245,158,11,0.15) 40%, rgba(245,158,11,0.3) 60%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(245,158,11,0.1) 40%, rgba(245,158,11,0.2) 60%, transparent 100%);
   animation: scan-h 11s linear infinite;
+  z-index: 4;
 }
 @keyframes scan-h { 0%{top:0%} 100%{top:100%} }
 
-.vignette-left {
-  position: absolute; inset: 0;
-  background: linear-gradient(90deg, #0a0c0f 25%, rgba(10,12,15,0.7) 50%, transparent 72%);
-}
-.vignette-bottom {
-  position: absolute; bottom: 0; left: 0; right: 0; height: 160px;
-  background: linear-gradient(0deg, #0a0c0f 0%, transparent 100%);
-}
-
-/* 文字内容 — 加宽 */
+/* 文字内容 - 调整层级与间距 */
 .hero-content {
   position: relative;
-  z-index: 1;
+  z-index: 5;
   padding: 0 5% 0 8%;
-  max-width: 740px; /* 更宽 */
+  max-width: 800px;
   width: 100%;
+  pointer-events: none; /* 穿透文字点击点点 */
 }
+.hero-content * { pointer-events: auto; } /* 恢复交互 */
 
 .hero-badge {
   display: inline-flex;
@@ -685,11 +653,46 @@ const scenarios = [
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  min-height: 480px;
 }
+
+.sc-card-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.5s ease;
+  z-index: 0;
+}
+
+.sc-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(13, 16, 23, 0.7) 0%, rgba(13, 16, 23, 0.95) 100%);
+  z-index: 1;
+  transition: background 0.3s ease;
+}
+
+.sc-content-wrap {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sc-card:hover .sc-card-bg {
+  transform: scale(1.1);
+}
+
+.sc-card:hover .sc-card-overlay {
+  background: linear-gradient(180deg, rgba(13, 16, 23, 0.5) 0%, rgba(13, 16, 23, 0.9) 100%);
+}
+
 .sc-card:hover { 
   border-color: #374151; 
   transform: translateY(-6px);
-  background: #11141b;
   box-shadow: 0 12px 32px -12px rgba(0,0,0,0.5);
 }
 .sc-card:hover .sc-bar { opacity: 1; height: 3px; }
