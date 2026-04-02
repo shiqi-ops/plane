@@ -126,8 +126,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import axios from 'axios' 
+import { ref, computed, nextTick } from 'vue'
+// 【重要】导入你封装好的 api 实例
+import api from '@/api' 
 
 const file = ref(null)
 const filePreview = ref('')
@@ -152,7 +153,7 @@ const riskLevelCN = computed(() => {
     '中': '中 (Medium)',
     '高': '高 (High)'
   }
-  return map[riskLevel.value] || riskLevel.value
+  return map[riskLevel.value] || riskLevel.value || '待分析'
 })
 
 const logs = [
@@ -174,43 +175,54 @@ function handleFileUpload(e) {
 }
 
 async function startAnalysis() {
+  if (!file.value) return
+  
   analyzing.value = true
   activeLogs.value = []
   overallProgress.value = 0
   
-  // 1. 模拟前端日志滚动过程（提升用户体验）
+  // 1. 模拟前端日志滚动过程（异步执行，不阻塞请求）
   const logPromise = (async () => {
     for (const log of logs) {
       activeLogs.value.push(log)
-      await new Promise(r => setTimeout(r, 600))
+      // 模拟进度条增长
       if (overallProgress.value < 90) overallProgress.value += 12
+      await new Promise(r => setTimeout(r, 600))
     }
   })()
 
-  // 2. 发起后端请求
+  // 2. 准备 FormData
   const formData = new FormData()
-  formData.append('image', file.value) 
+  // 【关键】这里的 key 必须和后端 @RequestParam("static/static") 保持一致
+  formData.append('static/static', file.value) 
 
   try {
-    const response = await axios.post('/api/analyze', formData, {
+    // 【关键】使用 api 实例发送请求
+    const response = await api.post('/agent/fast_api', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
 
     const data = response.data
 
-    // 等待日志动画完成后更新真实数据
+    // 等待前端日志动画模拟完成后，再显示真实结果
     await logPromise
     
-    // 3. 映射后端数据到前端变量
-    riskLevel.value = data.risk_level
-    securityScore.value = parseFloat(data.risk_score).toFixed(2) 
-    agent2_analysis.value = data.agent2_analysis
-    finalReport.value = data.final_report
+    // 3. 映射后端数据
+    // 注意：请根据后端 AgentResult 类的实际字段名进行微调
+    riskLevel.value = data.risk_level || data.riskLevel
+    securityScore.value = data.risk_score ? parseFloat(data.risk_score).toFixed(2) : '0.00'
+    agent1_analysis.value = data.agent1_analysis || ''
+    agent2_analysis.value = data.agent2_analysis || ''
+    finalReport.value = data.final_report || data.finalReport
 
     overallProgress.value = 100
+    activeLogs.value.push("分析完成：检测结果已汇总。")
+    
   } catch (error) {
     console.error("分析失败:", error)
-    activeLogs.value.push("错误：无法连接到远程分析服务器")
+    // 细化错误提示
+    const errorMsg = error.response?.data?.message || "无法连接到远程分析服务器"
+    activeLogs.value.push(`错误：${errorMsg} (状态码: ${error.response?.status || '网络错误'})`)
   } finally {
     analyzing.value = false
   }

@@ -280,8 +280,10 @@ async function handleSendCode() {
   
   loading.value = true
   error.value = ''
+  console.log(form.value.email);
+  
   try {
-    await api.post('/auth/send-code', { email: form.value.email })
+    await api.post('/auth/send', { email: form.value.email })
     successMsg.value = '验证码已发送至邮箱'
     startTimer()
   } catch (e) {
@@ -315,10 +317,10 @@ async function handleResetPassword() {
 
   loading.value = true
   try {
-    await api.post('/auth/reset-password', {
+    await api.post('/auth/update', {
       email: form.value.email,
-      code: form.value.code,
-      newPassword: form.value.password
+      verificationCode: form.value.code,
+      password: form.value.password
     })
     successMsg.value = '密码重置成功'
     setTimeout(() => switchMode('login'), 1500)

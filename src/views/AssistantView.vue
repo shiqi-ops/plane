@@ -215,9 +215,17 @@ async function sendMsg(text) {
 
   chatLoading.value = true
   try {
-    const res = await api.post('/assistant/chat', { message: content })
-    messages.value.push({ id: ++msgId, role: 'ai', content: res.data.reply })
-  } catch {
+  const res = await api.post('/ai/chat', { 
+    id: '123', 
+    messages: content 
+  })
+  
+  messages.value.push({ 
+    id: ++msgId, 
+    role: 'ai', 
+    content: typeof res.data === 'string' ? res.data : res.data.reply 
+  })
+} catch {
     messages.value.push({ id: ++msgId, role: 'ai', content: '请求失败，请检查后端连接。' })
   } finally {
     chatLoading.value = false
