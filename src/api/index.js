@@ -1,13 +1,13 @@
 import axios from 'axios'
-import router from '@/router'
+import router from '@/router/index.js'
 const api = axios.create({
-  baseURL: 'https://7c45feff.r39.cpolar.top', 
+  baseURL: 'http://71380674.r39.cpolar.top', 
   timeout: 0,
 })
 
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  if (token) config.headers.Authorization = `Bearer ${token}` 
   return config
 })
 
@@ -15,10 +15,10 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   res => res,
   err => {
-    if (err.response?.status === 401) {
+    if (err.response?.status === 401 && !err.config.url.includes('/auth/login')) {
       localStorage.removeItem('token')
       localStorage.removeItem('username')
-      router.push('/login')
+      // router.push('/login')
     }
     return Promise.reject(err)
   }

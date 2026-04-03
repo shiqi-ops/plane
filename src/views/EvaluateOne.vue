@@ -179,7 +179,7 @@
           <div class="visual-block" v-if="result.compare_path">
             <div class="visual-label">1. 原始图像 (Original) vs 对抗样本 (Adversarial)</div>
             <div class="visual-img-wrap">
-              <img :src="imgUrl(result.compare_path)" alt="对比图" />
+              <img :src="result.compare_path" alt="对比图" />
             </div>
             <p class="visual-desc">
               对比分析：左侧为原始输入图像，右侧为添加扰动（ε={{ result.eps }}）后的对抗样本。虽然视觉差异极小，但已成功诱导模型产生错误判断。
@@ -190,7 +190,7 @@
           <div class="visual-block" v-if="result.curve_path">
             <div class="visual-label">2. 鲁棒性性能曲线 (Robustness Curve)</div>
             <div class="visual-img-wrap">
-              <img :src="imgUrl(result.curve_path)" alt="鲁棒性曲线" />
+              <img :src="result.curve_path" alt="鲁棒性曲线" />
             </div>
             <p class="visual-desc">
               曲线分析显示：随着扰动强度（eps）逐步提升，模型准确率呈现下降趋势，反映了模型随扰动增强时的鲁棒性衰减规律。
@@ -200,9 +200,17 @@
 
         <!-- 结论 -->
         <div class="report-conclusion">
-          <div class="conclusion-label">综合评测结论:</div>
-          <div class="conclusion-text">
-            {{ conclusionText(result) }}
+          <div class="conclusion-content">
+            <div class="conclusion-label">综合评测结论:</div>
+            <div class="conclusion-text">
+              {{ conclusionText(result) }}
+            </div>
+          </div>
+          <!-- 导出按钮 -->
+          <div v-if="result.download_url" class="export-wrap">
+            <button class="export-btn" @click="handleDownload">
+              <span class="export-icon">⤓</span> 导出详细评测报告 (CSV/Excel)
+            </button>
           </div>
         </div>
 
@@ -280,12 +288,6 @@ function conclusionText(r) {
   return `模型 ${r.model} 在 ${r.attack} 攻击（ε=${r.eps}）下，准确率从 ${(r.clean_accuracy * 100).toFixed(1)}% 下降至 ${adv}%，降幅达 ${drop}%，鲁棒等级为 ${r.robust_level}。${gradeDesc(r.robust_level)}。`
 }
 
-function imgUrl(path) {
-  if (!path) return ''
-  if (path.startsWith('http')) return path
-  const filename = path.split('/').pop()
-  return `${import.meta.env.VITE_API_BASE}/results/${filename}`
-}
 const canSubmit = computed(() => form.value.model && form.value.attack)
 function saveHistory(entry) {
   const list = JSON.parse(localStorage.getItem('evalHistory') || '[]')
@@ -314,6 +316,22 @@ async function handleSubmit() {
   } finally {
     loading.value = false
   }
+}
+
+// ── 下载报告 ──────────────────────────────────
+function handleDownload() {
+  if (!result.value?.download_url) return
+  const prefix = 'D:/java//xiaowebproject//mall//mall//tmp_dir'
+  // 拼接路径
+  const fullPath = prefix + result.value.download_url
+  
+  // 创建 a 标签模拟点击下载
+  const link = document.createElement('a')
+  link.href = fullPath
+  link.setAttribute('download', result.value.download_url.split('/').pop())
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 </script>
 
@@ -601,13 +619,41 @@ async function handleSubmit() {
 .report-conclusion {
   background: rgba(245,158,11,0.03);
   border: 1px solid rgba(245,158,11,0.1);
-  padding: 24px;
+  padding: 32px;
   border-radius: 4px;
   margin-bottom: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 40px;
 }
+.conclusion-content { flex: 1; }
 .conclusion-label { font-size: 0.9rem; font-weight: 700; color: #f59e0b; margin-bottom: 12px; }
 .conclusion-text { font-size: 0.88rem; color: #9ca3af; line-height: 1.8; }
 .conclusion-text strong { color: #f0f2f5; }
+
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f59e0b;
+  border: none;
+  color: #0a0c0f;
+  padding: 12px 24px;
+  border-radius: 2px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.export-btn:hover {
+  background: #fbbf24;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}
+.export-icon { font-size: 1.2rem; }
 
 /* 页脚 */
 .report-footer {

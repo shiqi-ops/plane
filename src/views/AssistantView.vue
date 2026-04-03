@@ -215,8 +215,8 @@ async function sendMsg(text) {
 
   chatLoading.value = true
   try {
-  const res = await api.post('/ai/chat', { 
-    id: '123', 
+  const res = await api.post('/ai/chat_stream', { 
+    id: Date.now().toString(), 
     messages: content 
   })
   

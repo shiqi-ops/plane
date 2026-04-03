@@ -145,26 +145,23 @@
           <div v-if="tab === 'security'" class="security-container">
             <div class="security-card">
               <h3 class="sec-title">账号安全 (Security)</h3>
+              
+              <!-- 修改密码 -->
               <div class="sec-item">
                 <div class="sec-info">
                   <p class="sec-label">登录密码</p>
                   <p class="sec-desc">互联网账号建议定期修改密码，确保安全</p>
                 </div>
-                <button class="sec-btn" @click="handleSecurity('change-pwd')">修改密码</button>
+                <button class="sec-btn" @click="showPwdModal = true">修改密码</button>
               </div>
+
+              <!-- 修改邮箱 -->
               <div class="sec-item">
                 <div class="sec-info">
                   <p class="sec-label">电子邮箱</p>
                   <p class="sec-desc">已绑定：{{ email }}</p>
                 </div>
-                <button class="sec-btn" @click="handleSecurity('bind-email')">更换邮箱</button>
-              </div>
-              <div class="sec-item">
-                <div class="sec-info">
-                  <p class="sec-label">双重认证</p>
-                  <p class="sec-desc">未开启。开启后登录需验证码，增加额外安全层</p>
-                </div>
-                <button class="sec-btn outline" @click="handleSecurity('2fa')">立即开启</button>
+                <button class="sec-btn" @click="showEmailModal = true">更换邮箱</button>
               </div>
             </div>
 
@@ -189,18 +186,107 @@
         </div>
       </main>
     </div>
+
+    <!-- 修改密码弹窗 -->
+    <div v-if="showPwdModal" class="modal-overlay" @click.self="showPwdModal = false">
+      <div class="modal-card">
+        <h3 class="modal-title">修改登录密码</h3>
+        <div class="modal-form">
+          <div class="m-input-group">
+            <label>当前密码</label>
+            <input type="password" v-model="pwdForm.password" placeholder="请输入当前密码" />
+          </div>
+          <div class="m-input-group">
+            <label>新密码</label>
+            <input type="password" v-model="pwdForm.newPassword" placeholder="请输入新密码" />
+          </div>
+        </div>
+        <div class="modal-btns">
+          <button class="m-btn-cancel" @click="showPwdModal = false">取消</button>
+          <button class="m-btn-confirm" :disabled="submitting" @click="updatePassword">
+            {{ submitting ? '提交中...' : '确认修改' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 更换邮箱弹窗 -->
+    <div v-if="showEmailModal" class="modal-overlay" @click.self="showEmailModal = false">
+      <div class="modal-card">
+        <h3 class="modal-title">更换绑定邮箱</h3>
+        <div class="modal-form">
+          <div class="m-input-group">
+            <label>新邮箱地址</label>
+            <input type="email" v-model="emailForm.newEmail" placeholder="请输入新邮箱地址" />
+          </div>
+        </div>
+        <div class="modal-btns">
+          <button class="m-btn-cancel" @click="showEmailModal = false">取消</button>
+          <button class="m-btn-confirm" :disabled="submitting" @click="updateEmail">
+            {{ submitting ? '提交中...' : '确认更换' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import api from '@/api'
 
 const router = useRouter()
 const tab = ref('history')
 const username = computed(() => localStorage.getItem('username') || 'USER')
 const teamName = ref('无人机鲁棒性实验室 (Drone-Lab)')
-const email = ref('shiqifu@drone-eval.com')
+const email = ref(localStorage.getItem('email') || 'shiqifu@drone-eval.com')
+
+const submitting = ref(false)
+
+// 密码修改
+const showPwdModal = ref(false)
+const pwdForm = ref({ password: '', newPassword: '' })
+async function updatePassword() {
+  if (!pwdForm.value.password || !pwdForm.value.newPassword) return alert('请完整填写信息')
+  submitting.value = true
+  try {
+    await api.post('/auth/update_password', {
+      username: username.value,
+      password: pwdForm.value.password,
+      newPassword: pwdForm.value.newPassword
+    })
+    alert('密码修改成功，请重新登录')
+    localStorage.clear()
+    router.push('/login')
+  } catch (e) {
+    alert(e.response?.data?.message || '密码修改失败')
+  } finally {
+    submitting.value = false
+  }
+}
+
+// 邮箱修改
+const showEmailModal = ref(false)
+const emailForm = ref({ newEmail: '' })
+async function updateEmail() {
+  if (!emailForm.value.newEmail) return alert('请输入新邮箱地址')
+  submitting.value = true
+  try {
+    await api.post('/auth/update_email', {
+      username: username.value,
+      newEmail: emailForm.value.newEmail
+    })
+    alert('邮箱更换成功')
+    email.value = emailForm.value.newEmail
+    localStorage.setItem('email', email.value)
+    showEmailModal.value = false
+  } catch (e) {
+    alert(e.response?.data?.message || '邮箱更换失败')
+  } finally {
+    submitting.value = false
+  }
+}
 
 // 历史记录
 const history = computed(() => {
@@ -262,10 +348,6 @@ function reEvaluate(task) {
 
 function exportPDF(task) {
   alert(`正在为任务 [#${task.id}] 生成 PDF 详细报告...`)
-}
-
-function handleSecurity(action) {
-  alert(`功能开发中：执行 ${action}`)
 }
 
 function exportSummary() {
@@ -507,6 +589,42 @@ function exportSummary() {
 
 .empty-state { text-align: center; padding: 80px 0; }
 .e-icon { font-size: 3rem; color: #1e2530; margin-bottom: 16px; display: block; }
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2000;
+}
+.modal-card {
+  background: #0d1017; border: 1px solid #1e2530;
+  padding: 40px; border-radius: 4px; width: 440px;
+  box-shadow: 0 32px 64px -16px rgba(0,0,0,0.8);
+}
+.modal-title { font-size: 1.25rem; color: #f0f2f5; margin: 0 0 32px; font-weight: 700; }
+.modal-form { display: flex; flex-direction: column; gap: 24px; margin-bottom: 40px; }
+.m-input-group { display: flex; flex-direction: column; gap: 8px; }
+.m-input-group label { font-family: 'Share Tech Mono', monospace; font-size: 0.65rem; color: #4b5563; text-transform: uppercase; }
+.m-input-group input {
+  background: #13171f; border: 1px solid #374151; color: #d4d8de;
+  padding: 12px 16px; border-radius: 2px; outline: none; transition: all 0.2s;
+}
+.m-input-group input:focus { border-color: #f59e0b; background: #0d1017; }
+
+.modal-btns { display: flex; justify-content: flex-end; gap: 16px; }
+.m-btn-cancel {
+  background: transparent; border: 1px solid #374151; color: #9ca3af;
+  padding: 10px 24px; border-radius: 2px; cursor: pointer; transition: all 0.2s;
+}
+.m-btn-cancel:hover { border-color: #4b5563; color: #d4d8de; }
+.m-btn-confirm {
+  background: #f59e0b; border: none; color: #0a0c0f; font-weight: 700;
+  padding: 10px 32px; border-radius: 2px; cursor: pointer; transition: all 0.2s;
+}
+.m-btn-confirm:hover { background: #fbbf24; transform: translateY(-2px); }
+.m-btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 @media (max-width: 1100px) {
   .account-layout { grid-template-columns: 1fr; }

@@ -351,6 +351,7 @@ async function handleLogin() {
       password: form.value.password,
     })
     // 后端返回 { token: '...', username: '...' }
+    console.log('res对象:', res)
     localStorage.setItem('token', res.data.token)
     localStorage.setItem('username', res.data.username ?? form.value.username)
     router.push('/home')

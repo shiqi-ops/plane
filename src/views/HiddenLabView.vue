@@ -127,8 +127,7 @@
 
 <script setup>
 import { ref, computed, nextTick } from 'vue'
-// 【重要】导入你封装好的 api 实例
-import api from '@/api' 
+import api from '../api/index.js'
 
 const file = ref(null)
 const filePreview = ref('')
@@ -193,13 +192,12 @@ async function startAnalysis() {
 
   // 2. 准备 FormData
   const formData = new FormData()
-  // 【关键】这里的 key 必须和后端 @RequestParam("static/static") 保持一致
-  formData.append('static/static', file.value) 
+  // 【关键】这里的 key 必须和后端接口文档保持一致 (file)
+  formData.append('file', file.value) 
 
   try {
     // 【关键】使用 api 实例发送请求
     const response = await api.post('/agent/fast_api', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
     })
 
     const data = response.data

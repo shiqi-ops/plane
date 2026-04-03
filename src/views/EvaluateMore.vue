@@ -139,10 +139,10 @@
         <div class="report-section-title"><span>▌</span> 可视化图表分析 (Visual Analysis)</div>
         <div class="report-visuals">
           <!-- Attack Bar -->
-          <div class="visual-block" v-if="result.bar_path">
+          <div class="visual-block" v-if="result.attack_bar">
             <div class="visual-label">1. 攻击鲁棒性对比柱状图 (Attack Bar)</div>
             <div class="visual-img-wrap">
-              <img :src="imgUrl(result.bar_path)" alt="Attack Bar" />
+              <img :src="result.attack_bar" alt="Attack Bar" />
             </div>
             <p class="visual-desc">
               本图以柱状图形式直观展示了三种攻击方法下模型的对抗样本准确率，可清晰对比不同攻击对模型性能的影响程度。
@@ -150,7 +150,7 @@
           </div>
 
           <!-- Bubble Chart -->
-          <div class="visual-block" v-if="result.bubble_path">
+          <div class="visual-block" v-if="result.attack_bubble">
             <div class="visual-label">2. 攻击效能气泡图 (Attack Efficiency Bubble Chart)</div>
             <div class="visual-img-wrap">
               <div ref="bubbleRef" style="width: 100%; height: 400px;"></div>
@@ -161,10 +161,10 @@
           </div>
 
           <!-- Robustness Curve -->
-          <div class="visual-block" v-if="result.curve_path">
+          <div class="visual-block" v-if="result.attack_heatmap">
             <div class="visual-label">3. 鲁棒性曲线 (Robustness Curve)</div>
             <div class="visual-img-wrap">
-              <img :src="imgUrl(result.curve_path)" alt="Robustness Curve" />
+              <img :src="result.attack_attack_heatmap" alt="Robustness Curve" />
             </div>
             <p class="visual-desc">
               本图以折线图形式呈现了模型在不同扰动强度（Eps）下的准确率变化趋势，反映了模型随扰动增强时的鲁棒性衰减规律。
@@ -172,10 +172,10 @@
           </div>
 
           <!-- Heatmap -->
-          <div class="visual-block" v-if="result.heatmap_path">
+          <div class="visual-block" v-if="result.attack_heatmap">
             <div class="visual-label">4. 攻击热力图 (Heatmap)</div>
             <div class="visual-img-wrap">
-              <img :src="imgUrl(result.heatmap_path)" alt="Heatmap" />
+              <img :src="result.attack_heatmap" alt="Heatmap" />
             </div>
             <p class="visual-desc">
               本图以热力图形式展示了不同扰动强度与攻击方法组合下的模型准确率分布，通过颜色深浅直观体现准确率差异，便于快速定位高风险扰动-攻击组合。
@@ -185,10 +185,18 @@
 
         <!-- 结论 -->
         <div class="report-conclusion">
-          <div class="conclusion-label">综合评测结论:</div>
-          <div class="conclusion-text">
-            经过对所选攻击组合的批量压力测试，该模型表现出<strong>{{ result.robust_level === 'A' || result.robust_level === 'B' ? '良好' : '较弱' }}</strong>的防御能力。
-            在 {{ result.ranking[0]?.attack }} 攻击下性能下降最为显著，建议针对该类攻击进行针对性对抗训练加固。
+          <div class="conclusion-content">
+            <div class="conclusion-label">综合评测结论:</div>
+            <div class="conclusion-text">
+              经过对所选攻击组合的批量压力测试，该模型表现出<strong>{{ result.robust_level === 'A' || result.robust_level === 'B' ? '良好' : '较弱' }}</strong>的防御能力。
+              在 {{ result.ranking[0]?.attack }} 攻击下性能下降最为显著，建议针对该类攻击进行针对性对抗训练加固。
+            </div>
+          </div>
+          <!-- 导出按钮 -->
+          <div v-if="result.download_url" class="export-wrap">
+            <button class="export-btn" @click="handleDownload">
+              <span class="export-icon">⤓</span> 导出详细评测报告 (CSV/Excel)
+            </button>
           </div>
         </div>
 
@@ -306,17 +314,19 @@ function renderBubbleChart() {
                 style: {
                   fill: new echarts.graphic.RadialGradient(0.4, 0.3, 1, [ // 偏移中心点，模拟受光面
                     { offset: 0, color: 'rgba(255, 255, 255, 0)' },      // 核心透明
-                    { offset: 0.6, color: 'rgba(255, 255, 255, 0.05)' }, // 极浅的白色底膜
-                    { offset: 0.85, color: '#00ffff' },                 // 青色 (改为不透明或高饱和)
-                    { offset: 0.92, color: '#ff00ff' },                 // 品红
-                    { offset: 0.98, color: '#ffff00' },                 // 黄色
-                    { offset: 1, color: '#00ff64' }                     // 翠绿边缘
+                    { offset: 0.3, color: 'rgba(255, 255, 255, 0.02)' }, // 极淡底膜
+                    { offset: 0.5, color: 'rgba(0, 255, 255, 0.3)' },    // 青色初现
+                    { offset: 0.7, color: 'rgba(255, 0, 255, 0.4)' },    // 品红过渡
+                    { offset: 0.85, color: 'rgba(0, 255, 255, 0.8)' },   // 亮青
+                    { offset: 0.92, color: 'rgba(255, 0, 255, 0.9)' },   // 亮品红
+                    { offset: 0.98, color: 'rgba(255, 255, 0, 0.95)' },  // 亮黄
+                    { offset: 1, color: 'rgba(0, 255, 100, 1)' }         // 翠绿强边
                   ]),
-                  stroke: 'rgba(255, 255, 255, 0.8)', 
-                  lineWidth: 2,
-                  // 关键：增加外发光，让颜色“溢出”气泡边缘
-                  shadowBlur: 20,
-                  shadowColor: 'rgba(0, 255, 255, 0.5)' 
+                  stroke: 'rgba(255, 255, 255, 0.9)', 
+                  lineWidth: 2.5,
+                  // 关键：增加多重外发光，让颜色更艳丽
+                  shadowBlur: 25,
+                  shadowColor: 'rgba(0, 255, 255, 0.6)' 
                 }
               },
               // 在 children 数组中再加一个圆，放在彩虹层下面
@@ -433,13 +443,6 @@ const result = ref(null)
 
 const canSubmit = computed(() => form.value.model && form.value.attack_group)
 
-function imgUrl(path) {
-  if (!path) return ''
-  if (path.startsWith('http')) return path
-  const filename = path.split('/').pop()
-  return `${import.meta.env.VITE_API_BASE}/results/${filename}`
-}
-
 function saveHistory(entry) {
   const list = JSON.parse(localStorage.getItem('evalHistory') || '[]')
   list.push({
@@ -468,6 +471,22 @@ async function handleSubmit() {
   } finally {
     loading.value = false
   }
+}
+
+// ── 下载报告 ──────────────────────────────────
+function handleDownload() {
+  if (!result.value?.download_url) return
+  const prefix = 'D:/java//xiaowebproject//mall//mall//tmp_dir'
+  // 拼接路径
+  const fullPath = prefix + result.value.download_url
+  
+  // 创建 a 标签模拟点击下载
+  const link = document.createElement('a')
+  link.href = fullPath
+  link.setAttribute('download', result.value.download_url.split('/').pop())
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 
 watch(result, async (val) => {
@@ -740,13 +759,41 @@ onMounted(() => {
 .report-conclusion {
   background: rgba(6, 182, 212, 0.03);
   border: 1px solid rgba(6, 182, 212, 0.1);
-  padding: 24px;
+  padding: 32px;
   border-radius: 4px;
   margin-bottom: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 40px;
 }
+.conclusion-content { flex: 1; }
 .conclusion-label { font-size: 0.9rem; font-weight: 700; color: #06b6d4; margin-bottom: 12px; }
 .conclusion-text { font-size: 0.88rem; color: #9ca3af; line-height: 1.8; }
 .conclusion-text strong { color: #f0f2f5; }
+
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #06b6d4;
+  border: none;
+  color: #0a0c0f;
+  padding: 12px 24px;
+  border-radius: 2px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.export-btn:hover {
+  background: #22d3ee;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+}
+.export-icon { font-size: 1.2rem; }
 
 /* 页脚 */
 .report-footer {
