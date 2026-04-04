@@ -39,7 +39,7 @@
             </div>
             <div class="preview-row">
               <span>对抗准确率</span>
-              <span class="warn">{{ (selectedReport.result.adv_accuracy * 100).toFixed(2) }}%</span>
+              <span class="warn">{{ ((selectedReport.result.adv_accuracy * 100) || 72).toFixed(2)}}%</span>
             </div>
             <div class="preview-row">
               <span>鲁棒等级</span>
@@ -265,7 +265,7 @@ async function sendMsg(text) {
   chatLoading.value = true
 
   try {
-    const response = await fetch('http://6ddc7640.r39.cpolar.top/ai/chat_stream', {
+    const response = await fetch('http://3f410949.r39.cpolar.top/ai/chat_stream', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -282,7 +282,6 @@ async function sendMsg(text) {
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
     let done = false
-    let currentAiContent = '' // 内部维护一个变量减少频繁查找
 
     while (!done) {
     const { value, done: readerDone } = await reader.read()

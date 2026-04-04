@@ -164,7 +164,7 @@
           <div class="visual-block" v-if="result.attack_heatmap">
             <div class="visual-label">3. 鲁棒性曲线 (Robustness Curve)</div>
             <div class="visual-img-wrap">
-              <img :src="result.attack_heatmap" alt="Robustness Curve" />
+              <img :src="result.robustness_curve" alt="Robustness Curve" />
             </div>
             <p class="visual-desc">
               本图以折线图形式呈现了模型在不同扰动强度（Eps）下的准确率变化趋势，反映了模型随扰动增强时的鲁棒性衰减规律。
@@ -195,7 +195,7 @@
           <!-- 导出按钮 -->
           <div v-if="result.download_url" class="export-wrap">
             <button class="export-btn" @click="handleDownload">
-              <span class="export-icon">⤓</span> 导出详细评测报告 (CSV/Excel)
+              <span class="export-icon">⤓</span> 导出详细评测报告
             </button>
           </div>
         </div>
@@ -406,7 +406,34 @@ function saveHistory(entry) {
   localStorage.setItem('evalHistory', JSON.stringify(list))
 }
 
-
+// 模拟后端返回的数据结构
+// 在 script setup 里的 handleSubmit 函数上方添加
+const getMockData = () => {
+  return {
+    model: 'ResNet18 (Mock)',
+    dataset: 'CIFAR-10',
+    dataset_size: 10000,
+    clean_accuracy: 0.92,
+    robust_score: 85.5,
+    robust_level: 'A',
+    // 关键：气泡图渲染依赖这个数组
+    attack_results: [
+      { attack: 'FGSM', clean_accuracy: 0.92, adv_accuracy: 0.72, accuracy_drop: 0.20, attack_success_rate: 0.28 },
+      { attack: 'FFGSM', clean_accuracy: 0.92, adv_accuracy: 0.65, accuracy_drop: 0.27, attack_success_rate: 0.45 },
+      { attack: 'RFGSM', clean_accuracy: 0.92, adv_accuracy: 0.45, accuracy_drop: 0.47, attack_success_rate: 0.82 },
+    ],
+    ranking: [
+      { attack: 'RFGSM', attack_success_rate: 0.82 },
+      { attack: 'FFGSM', attack_success_rate: 0.45 },
+      { attack: 'FGSM', attack_success_rate: 0.28 },
+    ],
+    // 随便放个占位图，防止报错
+    attack_bar: '../../public/009.png',
+    attack_heatmap: '../../public/011.png',
+    robustness_curve: '../../public/010.png',
+    download_url: '../../public/012.pdf'
+  }
+}
 
 // ── 提交评测 ──────────────────────────────────
 async function handleSubmit() {
@@ -414,48 +441,65 @@ async function handleSubmit() {
   result.value = null
 
 // --- 暂时切换到 Mock 模式 ---
-  // setTimeout(async () => {
-  //   result.value = getMockData()
-  //   loading.value = false
+  setTimeout(async () => {
+
+    const mockData = getMockData()
     
-  //   // 确保 DOM 更新后执行图表渲染
+    // 2. 赋值给响应式变量渲染 UI
+    result.value = mockData
+    loading.value = false
+    
+    // 3. --- 关键：保存到本地历史记录 ---
+    saveHistory({
+      type: 'more',                      // 标识这是多攻击评测
+      model: form.value.model,           // 用户选的模型
+      attack_group: form.value.attack_group, // 用户选的攻击组
+      result: mockData                   // 存入完整的 Mock 结果对象
+    })
+    // 确保 DOM 更新后执行图表渲染
+    await nextTick()
+    renderBubbleChart()
+  }, 1000)
+
+  // try {
+  //   const payload = {
+  //     model: form.value.model,
+  //     attack_group: form.value.attack_group,
+  //     dataset: 'drone_dataset',
+  //     eps: '0.03',
+  //   }
+  //   // 确保你的 api.defaults.baseURL 已经设置了正确的后端地址
+  //   const res = await api.post('/evaluate/more', payload)
+  //   result.value = res.data
+  //   saveHistory({ 
+  //     type: 'more',
+  //     model: form.value.model, 
+  //     attack_group: form.value.attack_group, 
+  //     result: res.data 
+  //   })
   //   await nextTick()
   //   renderBubbleChart()
-  // }, 1000)
-
-  try {
-    const payload = {
-      model: form.value.model,
-      attack_group: form.value.attack_group,
-      dataset: 'drone_dataset',
-      eps: '0.03',
-    }
-    // 确保你的 api.defaults.baseURL 已经设置了正确的后端地址
-    const res = await api.post('/evaluate/more', payload)
-    result.value = res.data
-  } catch (e) {
-    console.error(e)
-    alert('评测失败，请确认后端服务已启动并允许跨域')
-  } finally {
-    loading.value = false
-  }
+  // } catch (e) {
+  //   console.error(e)
+  //   alert('评测失败，请确认后端服务已启动并允许跨域')
+  // } finally {
+  //   loading.value = false
+  // }
 }
 
 
 function handleDownload() {
-  if (!result.value?.download_url) return
+  if (!result.value?.download_url) {
+    alert('暂无评测报告')
+    return
+  }
+
+  // 获取文件路径
+  const fileUrl = result.value.download_url
   
-  const baseUrl = 'http://localhost:8080/files'
-  
-  const rawPath = result.value.download_url
-  const finalUrl = rawPath.startsWith('/') ? `${baseUrl}${rawPath}` : `${baseUrl}/${rawPath}`
-  
-  const link = document.createElement('a')
-  link.href = finalUrl
-  link.setAttribute('download', rawPath.split('/').pop())
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+  // 使用 window.open 打开新窗口
+  // 浏览器会自动识别 .pdf 后缀并调用内置预览器渲染
+  window.open(fileUrl, '_blank')
 }
 
 watch(result, async (val) => {

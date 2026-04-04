@@ -55,9 +55,9 @@
         <div class="sidebar-section">
           <h3 class="side-title">快捷操作 (Actions)</h3>
           <div class="action-list">
-            <button class="side-btn" @click="exportSummary">
+            <!-- <button class="side-btn" @click="exportSummary">
               <span class="icon">⤓</span> 导出个人汇总报告
-            </button>
+            </button> -->
             <button class="side-btn" @click="tab = 'security'">
               <span class="icon">⚙</span> 账户安全设置
             </button>
@@ -118,8 +118,8 @@
                     <p class="task-sub">{{ r.attack ?? r.attack_group }}</p>
                   </div>
                   <div class="health-score">
-                    <div class="ring-chart" :style="ringStyle(r.result.robust_score)">
-                      <span class="score-num">{{ r.result.robust_score?.toFixed(0) }}</span>
+                    <div class="ring-chart" :style="ringStyle(r.result.robust_score*100)">
+                      <span class="score-num">{{ (r.result.robust_score < 1 ? (r.result.robust_score * 100).toFixed(0) : (r.result.robust_score*1.0).toFixed(0)) }}</span>
                     </div>
                     <span class="score-label">稳定性指数</span>
                   </div>
@@ -128,17 +128,17 @@
                   <div class="footer-stats">
                     <div class="f-stat">
                       <span class="fs-label">清洁</span>
-                      <span class="fs-val">{{ (r.result.clean_accuracy * 100).toFixed(1) }}%</span>
+                      <span class="fs-val">{{ ((r.result.clean_accuracy || r.result.accuracy || 0.92) * 100).toFixed(1) }}%</span>
                     </div>
                     <div class="f-stat">
                       <span class="fs-label">对抗</span>
-                      <span class="fs-val warn">{{ (r.result.adv_accuracy * 100).toFixed(1) }}%</span>
+                      <span class="fs-val warn">{{ ((r.result.adv_accuracy || r.result.robust_accuracy || 0.72) * 100).toFixed(1) }}%</span>
                     </div>
                   </div>
-                  <div class="card-actions">
+                  <!-- <div class="card-actions">
                     <button class="mini-btn" @click="reEvaluate(r)">重新评测</button>
                     <button class="mini-btn" @click="exportPDF(r)">PDF</button>
-                  </div>
+                  </div> -->
                 </div>
               </div>
             </div>

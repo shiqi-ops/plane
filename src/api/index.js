@@ -1,7 +1,7 @@
 import axios from 'axios'
 import router from '@/router/index.js'
 const api = axios.create({
-  baseURL: 'http://6ddc7640.r39.cpolar.top', 
+  baseURL: 'http://3f410949.r39.cpolar.top', 
   timeout: 0,
 })
 

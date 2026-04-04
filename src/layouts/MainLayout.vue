@@ -62,7 +62,6 @@
 <script setup>
 import { ref, computed, nextTick } from 'vue'
 import { RouterView, useRouter } from 'vue-router'
-import api from '../api/index.js' // 确保路径正确
 
 const router = useRouter()
 const username = computed(() => localStorage.getItem('username') || 'USER')
@@ -74,36 +73,111 @@ const chatInput = ref('')
 const chatLoading = ref(false)
 const chatBox = ref(null)
 let msgId = 0
+let bufferContent = ''      // 接收后端的缓冲区
+let displayContent = ''     // 正在显示的文字
+let typingTimer = null      // 定时器
+let isStreamFinished = false // 传输是否结束
 
+// --- 打字机核心逻辑 ---
+function startTyping(aiMsgId) {
+  if (typingTimer) return // 避免重复启动
+
+  typingTimer = setInterval(() => {
+    // 如果显示内容还没追上缓冲区内容
+    if (displayContent.length < bufferContent.length) {
+      // 每次取出一个字符
+      displayContent += bufferContent.charAt(displayContent.length)
+      
+      // 更新到响应式数组
+      const msg = messages.value.find(m => m.id === aiMsgId)
+      if (msg) {
+        msg.content = displayContent
+        // 渲染后自动滚动
+        nextTick(() => scrollBottom())
+      }
+    } else {
+      // 如果后端已经传输完毕，且内容也打完了，才清除定时器
+      if (isStreamFinished) {
+        clearInterval(typingTimer)
+        typingTimer = null
+      }
+    }
+  }, 30) // 30ms 一个字，流式输出建议稍微快一点
+}
+
+// --- 发送消息逻辑 ---
 async function sendMsg() {
   const content = chatInput.value.trim()
-  if (!content) return
+  if (!content || chatLoading.value) return 
   
   chatInput.value = ''
+  bufferContent = ''
+  displayContent = '' 
+  isStreamFinished = false
+  if (typingTimer) {
+    clearInterval(typingTimer)
+    typingTimer = null
+  }
+  
+  // 1. 用户消息上屏
   messages.value.push({ id: ++msgId, role: 'user', content })
-  await nextTick(); scrollBottom()
+  scrollBottom()
 
+  // 2. 插入 AI 空气泡
+  const aiMsgId = ++msgId
+  messages.value.push({ id: aiMsgId, role: 'ai', content: '' })
   chatLoading.value = true
+
   try {
-    const res = await api.post('/ai/chat', { 
-      id: Date.now().toString(), 
-      messages: content 
+    const response = await fetch('http://3f410949.r39.cpolar.top/ai/chat_stream', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+      },
+      body: JSON.stringify({
+        id: String(Date.now()),
+        messages: content
+      })
     })
-    messages.value.push({ 
-      id: ++msgId, 
-      role: 'ai', 
-      content: typeof res.data === 'string' ? res.data : res.data.reply 
-    })
-  } catch {
-    messages.value.push({ id: ++msgId, role: 'ai', content: '请求失败，请检查网络。' })
-  } finally {
+
+    if (!response.ok) throw new Error('网络响应错误')
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    
+    // 一旦流开始连接成功，就可以关闭 Loading 动画，让打字机接管气泡
+    chatLoading.value = false 
+
+    while (true) {
+      const { value, done } = await reader.read()
+      if (done) break
+      
+      const chunk = decoder.decode(value, { stream: true })
+      const lines = chunk.split('\n')
+      
+      for (const line of lines) {
+        // 兼容 data: 格式和纯文本格式
+        const dataStr = line.replace(/^data:\s*/, '').trim()
+        if (dataStr) {
+          bufferContent += dataStr 
+          startTyping(aiMsgId)
+        }
+      }
+    }
+    isStreamFinished = true 
+
+  } catch (error) {
     chatLoading.value = false
-    await nextTick(); scrollBottom()
+    const msg = messages.value.find(m => m.id === aiMsgId)
+    if (msg) msg.content = '回复生成失败，请检查网络或后端配置。'
   }
 }
 
 function scrollBottom() {
-  if (chatBox.value) chatBox.value.scrollTop = chatBox.value.scrollHeight
+  if (chatBox.value) {
+    chatBox.value.scrollTop = chatBox.value.scrollHeight
+  }
 }
 
 function handleLogout() {
@@ -301,10 +375,21 @@ main { flex: 1; display: flex; flex-direction: column; }
   border-radius: 8px;
   font-size: 0.85rem;
   line-height: 1.5;
+  word-break: break-all; /* 防止长代码块撑破气泡 */
+  transition: all 0.2s ease;
 }
 .user .mini-bubble { background: #f59e0b; color: #0a0c0f; border-bottom-right-radius: 2px; }
-.ai .mini-bubble { background: #1a1f26; color: #d4d8de; border: 1px solid #2d3543; border-bottom-left-radius: 2px; }
-
+.ai .mini-bubble { 
+background: #1a1f26; 
+color: #d4d8de; 
+border: 1px solid #2d3543; 
+border-bottom-left-radius: 2px; 
+animation: fadeIn 0.3s ease-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .chat-input-area {
   padding: 12px;
   display: flex;

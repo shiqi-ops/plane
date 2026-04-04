@@ -209,7 +209,7 @@
           <!-- 导出按钮 -->
           <div v-if="result.download_url" class="export-wrap">
             <button class="export-btn" @click="handleDownload">
-              <span class="export-icon">⤓</span> 导出详细评测报告 (CSV/Excel)
+              <span class="export-icon">⤓</span> 导出详细评测报告 
             </button>
           </div>
         </div>
