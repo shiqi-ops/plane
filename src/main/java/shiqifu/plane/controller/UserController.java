@@ -6,10 +6,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import shiqifu.plane.entity.dto.UpdateDTO;
+import shiqifu.plane.entity.dto.UpdateEmailDTO;
 import shiqifu.plane.entity.dto.UpdatePasswordDTO;
+import shiqifu.plane.entity.entity.SendDTO;
 import shiqifu.plane.entity.entity.User;
 import shiqifu.plane.entity.dto.UserLoginDTO;
 import shiqifu.plane.exception.PasswordErrorException;
+import shiqifu.plane.exception.UserNotFoundException;
 import shiqifu.plane.exception.VerificationCodeErrorException;
 import shiqifu.plane.exception.VerificationCodeNullException;
 import shiqifu.plane.service.impl.UserServiceImpl;
@@ -56,11 +60,24 @@ public class UserController {
     }
 
     @PostMapping("/send")
-    public void send(String email){
+    public void send(@RequestBody SendDTO sendDTO){
+        log.info("发送验证码");
+        String email=sendDTO.getEmail();
         userService.send(email);
     }
     @PostMapping("/update")
     public void update(@RequestBody UpdatePasswordDTO updatePasswordDTO) throws VerificationCodeErrorException, VerificationCodeNullException {
+        log.info("修改密码");
         userService.updatePassword(updatePasswordDTO);
+    }
+    @PostMapping("/update_password")
+    public void update_password(@RequestBody UpdateDTO updateDTO) throws UserNotFoundException {
+        log.info("修改密码2.0");
+        userService.update(updateDTO);
+    }
+    @PostMapping("/update_email")
+    public void update_email(@RequestBody UpdateEmailDTO updateEmailDTO) throws UserNotFoundException {
+        log.info("修改邮箱");
+        userService.updateEmail(updateEmailDTO);
     }
 }

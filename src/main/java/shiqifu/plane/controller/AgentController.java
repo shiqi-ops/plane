@@ -17,7 +17,7 @@ public class AgentController {
     @Autowired
     private AgentServiceImpl agentService;
     @PostMapping("/fast_api")
-    public AgentResult fast_api(@RequestParam("static/static") MultipartFile file) {
+    public AgentResult fast_api(@RequestParam("file")MultipartFile file) {
         log.info("fast_api开始了");
         try {
             AgentResult agentResult =agentService.fast_api(file);

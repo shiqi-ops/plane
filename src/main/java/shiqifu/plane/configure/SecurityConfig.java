@@ -76,6 +76,7 @@ public class SecurityConfig {
                                     .requestMatchers("/auth/register").permitAll()
                                     .requestMatchers("/auth/send").permitAll()
                                     .requestMatchers("/auth/update").permitAll()
+                                    .requestMatchers("/ai/chat_stream").permitAll()
                                     .anyRequest().authenticated();
                         }
                 )
@@ -89,7 +90,8 @@ public class SecurityConfig {
                 "/auth/login",
                 "/auth/register",
                 "/auth/send",
-                "/auth/update"
+                "/auth/update",
+                "ai/chat_stream"
         );
         private final AntPathMatcher antPathMatcher = new AntPathMatcher();
         private boolean isPathAllowed(String requestURI) {

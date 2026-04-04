@@ -1,16 +1,44 @@
 package shiqifu.plane.util;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.BaseFont;
 import com.lowagie.text.pdf.PdfWriter;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.io.RandomAccessRead;
+import org.apache.pdfbox.io.RandomAccessReadBuffer;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.rendering.ImageType;
+import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.tools.imageio.ImageIOUtil;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 import shiqifu.plane.entity.entity.AttackResult;
 import shiqifu.plane.entity.entity.Result;
 import shiqifu.plane.entity.entity.ResultMore;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.List;
-import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PdfUtil {
     private final static String path = "D:/java//xiaowebproject//mall//mall//tmp_dir/";
@@ -310,5 +338,115 @@ public class PdfUtil {
 
         doc.close();
         return "/"+random+".pdf";
+    }
+
+    public static Map<String, Object> parseByUrl(String sourceUrlOrPath, String imageSaveDir) {
+        Map<String, Object> result = new HashMap<>();
+        byte[] pdfBytes = null;
+
+        try {
+            // 1. 获取文件字节流 (区分本地和网络)
+            if (sourceUrlOrPath.startsWith("http")) {
+                pdfBytes = downloadFileFromWeb(sourceUrlOrPath);
+            } else {
+                pdfBytes = readFileFromLocal(sourceUrlOrPath);
+            }
+
+            if (pdfBytes == null || pdfBytes.length == 0) {
+                result.put("error", "文件内容为空");
+                return result;
+            }
+
+            // 2. 创建图片保存目录
+            createDirectories(imageSaveDir);
+
+            // 3. 使用 PDFBox 3.x 正确加载文档
+            // 关键修复点：使用 RandomAccessReadBuffer 包装 ByteArrayInputStream
+            try (ByteArrayInputStream bais = new ByteArrayInputStream(pdfBytes);
+                 RandomAccessReadBuffer randomAccessRead = new RandomAccessReadBuffer(bais);
+                 PDDocument document = Loader.loadPDF(randomAccessRead)) {
+
+                System.out.println("✅ 文档加载成功，共 " + document.getNumberOfPages() + " 页");
+
+                // 4. 提取图片
+                extractImages(document, imageSaveDir);
+
+                // 5. 提取并解析文本
+                String text = extractText(document);
+                Map<String, String> parsedData = parseFlightData(text);
+
+                result.put("text", text);
+                result.put("data", parsedData);
+                result.put("status", "success");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            result.put("status", "error");
+            result.put("message", e.getMessage());
+        }
+        return result;
+    }
+
+    // --- 辅助方法 ---
+
+    /** 读取本地文件 */
+    private static byte[] readFileFromLocal(String path) throws IOException {
+        Path filePath = Paths.get(path);
+        return Files.readAllBytes(filePath);
+    }
+
+    /** 下载网络文件 (使用 Java 11+ HttpClient) */
+    private static byte[] downloadFileFromWeb(String url) throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .build();
+
+        HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+        if (response.statusCode() == 200) {
+            return response.body();
+        }
+        return null;
+    }
+
+    /** 创建目录 */
+    private static void createDirectories(String dirPath) throws IOException {
+        Path path = Paths.get(dirPath);
+        if (!Files.exists(path)) {
+            Files.createDirectories(path);
+        }
+    }
+
+    /** 提取文本 */
+    private static String extractText(PDDocument document) throws IOException {
+        PDFTextStripper stripper = new PDFTextStripper();
+        return stripper.getText(document);
+    }
+
+    /** 提取图片 */
+    private static void extractImages(PDDocument document, String imageSaveDir) throws IOException {
+        PDFRenderer renderer = new PDFRenderer(document);
+        int pageCount = document.getNumberOfPages();
+        for (int i = 0; i < pageCount; i++) {
+            BufferedImage image = renderer.renderImageWithDPI(i, 300, ImageType.RGB);
+            String fileName = "page_" + (i + 1) + ".jpg";
+            File outputFile = new File(imageSaveDir, fileName);
+            ImageIO.write(image, "jpg", outputFile);
+        }
+    }
+
+    /** 解析数据 */
+    private static Map<String, String> parseFlightData(String text) {
+        Map<String, String> data = new HashMap<>();
+        if (text == null) return data;
+        // 你的正则逻辑...
+        Pattern datePattern = Pattern.compile("(\\d{4}-\\d{2}-\\d{2})");
+        Matcher dateMatcher = datePattern.matcher(text);
+        if (dateMatcher.find()) {
+            data.put("flight_date", dateMatcher.group(1));
+        }
+        return data;
     }
 }

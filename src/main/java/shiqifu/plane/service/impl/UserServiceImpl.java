@@ -1,5 +1,6 @@
 package shiqifu.plane.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mail.SimpleMailMessage;
@@ -10,8 +11,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import shiqifu.plane.entity.dto.UpdateDTO;
+import shiqifu.plane.entity.dto.UpdateEmailDTO;
 import shiqifu.plane.entity.dto.UpdatePasswordDTO;
 import shiqifu.plane.entity.entity.User;
+import shiqifu.plane.exception.UserNotFoundException;
 import shiqifu.plane.exception.VerificationCodeErrorException;
 import shiqifu.plane.exception.VerificationCodeNullException;
 import shiqifu.plane.mapper.UserMapper;
@@ -21,6 +25,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Service
 public class UserServiceImpl implements UserDetailsService {
     @Autowired
@@ -91,5 +96,32 @@ public class UserServiceImpl implements UserDetailsService {
            System.err.println("邮件发送失败: " + e.getMessage());
            throw new RuntimeException(e);
        }
+    }
+
+    public void update(UpdateDTO updateDTO) throws UserNotFoundException {
+        String username=updateDTO.getUsername();
+        String password=updateDTO.getPassword();
+        String newPassword=passwordEncoder.encode(updateDTO.getNewPassword());
+        Optional<User> user=userMapper.findByUsername(username);
+        if(user.isEmpty()) {
+            throw new UserNotFoundException("没有找到");
+        }
+        boolean isMatch = passwordEncoder.matches(password,user.get().getPassword());
+        if(isMatch){
+         userMapper.updatePassword(username,newPassword);
+        }else{
+            throw new UserNotFoundException("密码错误");
+        }
+    }
+    public void updateEmail(UpdateEmailDTO updateEmailDTO) throws UserNotFoundException {
+        String username=updateEmailDTO.getUsername();
+        String newEmail=updateEmailDTO.getNewEmail();
+        try {
+            userMapper.updateEmail(username,newEmail);
+        }
+        catch (Exception e) {
+            log.error("重新输入");
+            throw new UserNotFoundException("请重新输入");
+        }
     }
 }
