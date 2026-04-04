@@ -321,14 +321,14 @@ async function handleSubmit() {
 // ── 下载报告 ──────────────────────────────────
 function handleDownload() {
   if (!result.value?.download_url) return
-  const prefix = 'D:/java//xiaowebproject//mall//mall//tmp_dir'
-  // 拼接路径
-  const fullPath = prefix + result.value.download_url
+  const baseUrl = 'http://localhost:8080/files'
+  const rawPath = result.value.download_url
+  const finalUrl = rawPath.startsWith('/') ? `${baseUrl}${rawPath}` : `${baseUrl}/${rawPath}`
   
   // 创建 a 标签模拟点击下载
   const link = document.createElement('a')
-  link.href = fullPath
-  link.setAttribute('download', result.value.download_url.split('/').pop())
+  link.href = finalUrl
+  link.setAttribute('download', rawPath.split('/').pop())
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)

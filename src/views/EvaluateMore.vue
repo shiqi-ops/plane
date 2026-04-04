@@ -150,7 +150,7 @@
           </div>
 
           <!-- Bubble Chart -->
-          <div class="visual-block" v-if="result.attack_bubble">
+          <div class="visual-block" v-show="result && result.attack_results">
             <div class="visual-label">2. 攻击效能气泡图 (Attack Efficiency Bubble Chart)</div>
             <div class="visual-img-wrap">
               <div ref="bubbleRef" style="width: 100%; height: 400px;"></div>
@@ -164,7 +164,7 @@
           <div class="visual-block" v-if="result.attack_heatmap">
             <div class="visual-label">3. 鲁棒性曲线 (Robustness Curve)</div>
             <div class="visual-img-wrap">
-              <img :src="result.attack_attack_heatmap" alt="Robustness Curve" />
+              <img :src="result.attack_heatmap" alt="Robustness Curve" />
             </div>
             <p class="visual-desc">
               本图以折线图形式呈现了模型在不同扰动强度（Eps）下的准确率变化趋势，反映了模型随扰动增强时的鲁棒性衰减规律。
@@ -216,7 +216,14 @@ import { useRouter } from 'vue-router'
 import api from '../api/index.js'
 import * as echarts from 'echarts'
 const router = useRouter()
+// ── 基础响应式变量 ────────────────────────────────
+const form = ref({ model: '', attack_group: '' })
+const loading = ref(false)
+const result = ref(null)
+const reportId = computed(() => Math.random().toString(36).substr(2, 9).toUpperCase())
+const reportDate = computed(() => new Date().toLocaleDateString())
 
+const canSubmit = computed(() => form.value.model && form.value.attack_group)
 const models = [
   { label: 'ResNet18', value: 'resnet18', tag: 'baseline' },
   { label: 'MobileNetV2', value: 'mobilenetv2', tag: '轻量' },
@@ -236,60 +243,51 @@ let timer = null
 let baseData = []
 
 function renderBubbleChart() {
-  if (!bubbleRef.value || !result.value) return
-
-  // 初始化
-  if (!bubbleChart) {
-    bubbleChart = echarts.init(bubbleRef.value)
+  if (!bubbleRef.value) {
+    console.error("气泡图容器未找到");
+    return;
   }
 
-  // ⭐ 横轴映射（category → index）
-  const xIndexMap = {
-    FGSM: 0,
-    FFGSM: 1,
-    RFGSM: 2
+  // 如果已经有实例，先销毁或直接 setOption
+  if (bubbleChart) {
+    bubbleChart.dispose(); 
   }
+  
+  bubbleChart = echarts.init(bubbleRef.value);
 
-  // ⭐ 基础数据（字段已修正）
+  // ⭐ 动态生成横轴映射，防止硬编码报错
+  const categories = result.value.attack_results.map(item => item.attack);
+  const xIndexMap = {};
+  categories.forEach((name, idx) => { xIndexMap[name] = idx; });
+
   baseData = result.value.attack_results.map((item, index) => ({
     x: item.attack,
     y: item.attack_success_rate,
-    size: item.attack_success_rate * 55, // 进一步加大，增强视觉冲击力
+    size: item.attack_success_rate * 55, 
     phase: index * Math.PI / 1.5
   }))
 
   const option = {
     grid: { left: 40, right: 20, bottom: 40 },
     animation: false,
-
     xAxis: {
       type: 'category',
-      data: ['FGSM', 'FFGSM', 'RFGSM'],
+      data: categories,
       axisLine: { lineStyle: { color: '#333' } },
-      axisLabel: { color: '#666' },
-      axisTick: { lineStyle: { color: '#333' } }
+      axisLabel: { color: '#666' }
     },
-
     yAxis: {
       type: 'value',
-      min: 0.2,
-      max: 1.1,
-      interval: 0.1,
+      min: 0,
+      max: 1.2, // 给顶部留一点浮动空间
       name: 'Attack Success Rate',
       nameTextStyle: { color: '#666' },
-      axisLabel: { color: '#666' },
-      axisTick: { lineStyle: { color: '#333' } },
-      splitLine: { 
-        show: true,
-        lineStyle: { color: '#1e2530' } 
-      }
+      splitLine: { show: true, lineStyle: { color: '#1e2530' } }
     },
-
     series: [
       {
         type: 'custom',
         coordinateSystem: 'cartesian2d',
-
         renderItem: (params, api) => {
           const point = api.coord([api.value(0), api.value(1)])
           const size = api.value(2)
@@ -297,49 +295,48 @@ function renderBubbleChart() {
           return {
             type: 'group',
             children: [
-              // 1. 底层虹彩晕（增强肥皂泡的幻彩氛围）
+              // --- 1. 底层虹彩晕 ---
               {
                 type: 'circle',
                 shape: { cx: point[0], cy: point[1], r: size * 1.1 },
                 style: {
                   fill: 'transparent',
                   shadowBlur: 35,
-                  shadowColor: 'rgba(150, 180, 255, 0.4)', // 强化外围蓝色晕
+                  shadowColor: 'rgba(150, 180, 255, 0.4)',
                 }
               },
-              // 2. 主体肥皂泡（极高饱和度虹彩边缘）
+              // --- 2. 主体肥皂泡（极高饱和度虹彩渐变） ---
               {
                 type: 'circle',
                 shape: { cx: point[0], cy: point[1], r: size },
                 style: {
-                  fill: new echarts.graphic.RadialGradient(0.4, 0.3, 1, [ // 偏移中心点，模拟受光面
-                    { offset: 0, color: 'rgba(255, 255, 255, 0)' },      // 核心透明
-                    { offset: 0.3, color: 'rgba(255, 255, 255, 0.02)' }, // 极淡底膜
-                    { offset: 0.5, color: 'rgba(0, 255, 255, 0.3)' },    // 青色初现
-                    { offset: 0.7, color: 'rgba(255, 0, 255, 0.4)' },    // 品红过渡
-                    { offset: 0.85, color: 'rgba(0, 255, 255, 0.8)' },   // 亮青
-                    { offset: 0.92, color: 'rgba(255, 0, 255, 0.9)' },   // 亮品红
-                    { offset: 0.98, color: 'rgba(255, 255, 0, 0.95)' },  // 亮黄
-                    { offset: 1, color: 'rgba(0, 255, 100, 1)' }         // 翠绿强边
+                  fill: new echarts.graphic.RadialGradient(0.4, 0.3, 1, [
+                    { offset: 0, color: 'rgba(255, 255, 255, 0)' },
+                    { offset: 0.3, color: 'rgba(255, 255, 255, 0.02)' },
+                    { offset: 0.5, color: 'rgba(0, 255, 255, 0.3)' },
+                    { offset: 0.7, color: 'rgba(255, 0, 255, 0.4)' },
+                    { offset: 0.85, color: 'rgba(0, 255, 255, 0.8)' },
+                    { offset: 0.92, color: 'rgba(255, 0, 255, 0.9)' },
+                    { offset: 0.98, color: 'rgba(255, 255, 0, 0.95)' },
+                    { offset: 1, color: 'rgba(0, 255, 100, 1)' }
                   ]),
-                  stroke: 'rgba(255, 255, 255, 0.9)', 
+                  stroke: 'rgba(255, 255, 255, 0.9)',
                   lineWidth: 2.5,
-                  // 关键：增加多重外发光，让颜色更艳丽
                   shadowBlur: 25,
-                  shadowColor: 'rgba(0, 255, 255, 0.6)' 
+                  shadowColor: 'rgba(0, 255, 255, 0.6)'
                 }
               },
-              // 在 children 数组中再加一个圆，放在彩虹层下面
+              // --- 3. 极淡白膜层 ---
               {
                 type: 'circle',
                 shape: { cx: point[0], cy: point[1], r: size },
                 style: {
-                  fill: 'rgba(255, 255, 255, 0.03)', // 极淡的白膜，防止气泡完全“空洞”
+                  fill: 'rgba(255, 255, 255, 0.03)',
                   stroke: 'rgba(255, 255, 255, 0.2)',
                   lineWidth: 1
                 }
               },
-              // 3. 顶部弧形高光（增强质感反射）
+              // --- 4. 顶部弧形高光 ---
               {
                 type: 'arc',
                 shape: {
@@ -349,22 +346,21 @@ function renderBubbleChart() {
                   endAngle: -Math.PI * 0.25,
                   clockwise: true
                 },
-                // 修改那个 type: 'arc' 的部分
                 style: {
-                  stroke: '#fff', // 纯白
-                  lineWidth: 4,   // 加粗
+                  stroke: '#fff',
+                  lineWidth: 4,
                   lineCap: 'round',
                   shadowBlur: 10,
                   shadowColor: '#fff'
                 }
               },
-              // 4. 次高亮圆点（反射环境光）
+              // --- 5. 次高亮圆点 ---
               {
                 type: 'circle',
-                shape: { 
-                  cx: point[0] + size * 0.45, 
-                  cy: point[1] + size * 0.45, 
-                  r: size * 0.22 
+                shape: {
+                  cx: point[0] + size * 0.45,
+                  cy: point[1] + size * 0.45,
+                  r: size * 0.22
                 },
                 style: {
                   fill: new echarts.graphic.RadialGradient(0.5, 0.5, 1, [
@@ -376,72 +372,29 @@ function renderBubbleChart() {
             ]
           }
         },
-
-        // ⭐ 初始数据（必须用 index）
-        data: baseData.map(d => [
-          xIndexMap[d.x],
-          d.y,
-          d.size
-        ])
+        data: baseData.map(d => [xIndexMap[d.x], d.y, d.size])
       }
     ]
   }
-
   bubbleChart.setOption(option)
-
-  // ⭐ 清除旧动画
-  if (timer) clearInterval(timer)
-
-  // ⭐ 浮动动画
-  timer = setInterval(() => {
-    t += 0.04
-
-    bubbleChart.setOption({
-      series: [
-        {
-          data: baseData.map(d => [
-            xIndexMap[d.x],
-            d.y + Math.sin(t + d.phase) * 0.012, // 保持优雅浮动
-            d.size
-          ])
-        }
-      ]
-    }, { silent: true })
-  }, 16)
 }
+// 2. 改进 Watch 逻辑
+watch(() => result.value, async (newVal) => {
+  if (newVal && newVal.attack_results) {
+    // 核心：必须等待 Vue 渲染完 v-if 里的内容
+    await nextTick(); 
+    renderBubbleChart();
+  }
+}, { deep: true });
 
-//const reportId = computed(() => 'BCH' + Date.now().toString().slice(-8))
-//const reportDate = computed(() => new Date().toLocaleString('zh-CN'))
-const reportId = ref('') 
-const reportDate = ref('') 
+// 3. 增加窗口自适应（防止拉伸变形或消失）
+onMounted(() => {
+  window.addEventListener('resize', () => {
+    bubbleChart && bubbleChart.resize();
+  });
+});
 
-const form = ref({ model: '', attack_group: '' })
-const loading = ref(false)
-const result = ref(null)
-// const result = ref({
-//   model: 'ResNet18',
-//   dataset: 'drone_dataset',
-//   dataset_size: 1000,
-//   clean_accuracy: 0.7068,
-//   robust_score: 45.82,
-//   robust_level: 'C',
-//   attack_results: [
-//     { attack: 'FGSM', clean_accuracy: 0.7068, adv_accuracy: 0.3521, accuracy_drop: 0.3547, attack_success_rate: 0.5018 },
-//     { attack: 'RFGSM', clean_accuracy: 0.7068, adv_accuracy: 0.3105, accuracy_drop: 0.3963, attack_success_rate: 0.5607 },
-//     { attack: 'FFGSM', clean_accuracy: 0.7068, adv_accuracy: 0.3842, accuracy_drop: 0.3226, attack_success_rate: 0.4564 }
-//   ],
-//   ranking: [
-//     { attack: 'RFGSM', attack_success_rate: 0.5607 },
-//     { attack: 'FGSM', attack_success_rate: 0.5018 },
-//     { attack: 'FFGSM', attack_success_rate: 0.4564 }
-//   ],
-//   bar_path: 'mock_bar.png',
-//     bubble_path: 'mock_bubble.png',
-//     curve_path: 'mock_curve.png',
-//     heatmap_path: 'mock_heatmap.png'
-// })
 
-const canSubmit = computed(() => form.value.model && form.value.attack_group)
 
 function saveHistory(entry) {
   const list = JSON.parse(localStorage.getItem('evalHistory') || '[]')
@@ -453,9 +406,23 @@ function saveHistory(entry) {
   localStorage.setItem('evalHistory', JSON.stringify(list))
 }
 
+
+
+// ── 提交评测 ──────────────────────────────────
 async function handleSubmit() {
   loading.value = true
   result.value = null
+
+// --- 暂时切换到 Mock 模式 ---
+  // setTimeout(async () => {
+  //   result.value = getMockData()
+  //   loading.value = false
+    
+  //   // 确保 DOM 更新后执行图表渲染
+  //   await nextTick()
+  //   renderBubbleChart()
+  // }, 1000)
+
   try {
     const payload = {
       model: form.value.model,
@@ -463,27 +430,29 @@ async function handleSubmit() {
       dataset: 'drone_dataset',
       eps: '0.03',
     }
+    // 确保你的 api.defaults.baseURL 已经设置了正确的后端地址
     const res = await api.post('/evaluate/more', payload)
     result.value = res.data
-    saveHistory({ type: 'more', model: form.value.model, attack_group: form.value.attack_group, result: res.data })
   } catch (e) {
-    alert('评测失败，请检查后端连接')
+    console.error(e)
+    alert('评测失败，请确认后端服务已启动并允许跨域')
   } finally {
     loading.value = false
   }
 }
 
-// ── 下载报告 ──────────────────────────────────
+
 function handleDownload() {
   if (!result.value?.download_url) return
-  const prefix = 'D:/java//xiaowebproject//mall//mall//tmp_dir'
-  // 拼接路径
-  const fullPath = prefix + result.value.download_url
   
-  // 创建 a 标签模拟点击下载
+  const baseUrl = 'http://localhost:8080/files'
+  
+  const rawPath = result.value.download_url
+  const finalUrl = rawPath.startsWith('/') ? `${baseUrl}${rawPath}` : `${baseUrl}/${rawPath}`
+  
   const link = document.createElement('a')
-  link.href = fullPath
-  link.setAttribute('download', result.value.download_url.split('/').pop())
+  link.href = finalUrl
+  link.setAttribute('download', rawPath.split('/').pop())
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)

@@ -14,10 +14,13 @@
       <aside class="account-sidebar">
         <div class="sidebar-section">
           <div class="profile-summary">
-            <div class="avatar-wrap" title="Secure Access" @dblclick="router.push('/hidden-lab')">
+            <div class="avatar-group"> 
+              <div class="avatar-wrap" title="Secure Access" @dblclick="router.push('/hidden-lab')">
               <div class="avatar">{{ username[0]?.toUpperCase() }}</div>
               <div class="avatar-ring"></div>
             </div>
+            <span class="lab-guide-text">双击头像进入隐藏 AI 安全实验室页面</span>
+          </div>
             <h2 class="user-name">{{ username }}</h2>
             <p class="user-team">团队：{{ teamName }}</p>
             <div class="user-tags">
@@ -412,6 +415,42 @@ function exportSummary() {
 
 .profile-summary { text-align: center; }
 .avatar-wrap { position: relative; width: 88px; height: 88px; margin: 0 auto 20px; }
+
+/* 引导文字样式 */
+.avatar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.lab-guide-text {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.7rem; /* 稍微小一点，不喧宾夺主 */
+  color: #f59e0b;    /* 使用你项目中的警告/金橙色，比较醒目 */
+  letter-spacing: 0.5px;
+  opacity: 0.6;      /* 初始半透明 */
+  cursor: default;
+  transition: all 0.3s ease;
+  text-align: center;
+  /* 呼吸灯效果 */
+  animation: guide-glow 2s infinite ease-in-out;
+}
+
+/* 鼠标移动到头像区域时，文字变亮 */
+.avatar-group:hover .lab-guide-text {
+  opacity: 1;
+  color: #fbbf24;
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+@keyframes guide-glow {
+  0%, 100% { opacity: 0.4; transform: scale(0.98); }
+  50% { opacity: 0.8; transform: scale(1); }
+}
+
+
 .avatar {
   width: 100%; height: 100%;
   background: rgba(245,158,11,0.05);
@@ -428,7 +467,7 @@ function exportSummary() {
 }
 @keyframes rotate { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 
-.user-name { font-size: 1.25rem; font-weight: 700; color: #f0f2f5; margin: 0 0 4px; }
+.user-name { font-size: 1.25rem; font-weight: 700; color: #f0f2f5; margin: 0 0 4px;margin-top: 4px; }
 .user-team { font-size: 0.8rem; color: #6b7280; margin: 0 0 16px; }
 .user-tags { display: flex; justify-content: center; gap: 8px; }
 .u-tag {
