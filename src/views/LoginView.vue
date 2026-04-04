@@ -455,23 +455,16 @@ async function handleRegister() {
 
 /* ── 容器布局 ── */
 .login-container {
-  position: relative;
+ position: relative;
   z-index: 10;
   display: flex;
   align-items: center;
-  gap: 60px;
+  justify-content: center; /* 核心：整体水平居中 */
   width: 100%;
-  max-width: 1100px;
-  padding: 40px;
+  max-width: 1200px;       /* 适当调大，给两侧留空间 */
+  padding: 0 20px;
 }
 
-.login-wrap {
-  flex: 1;
-  max-width: 440px;
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-}
 
 /* ── 品牌 ── */
 .brand { text-align: center; }
@@ -510,10 +503,21 @@ async function handleRegister() {
 
 /* ── 侧边装饰 ── */
 .side-deco {
+  flex: 1;                 /* 关键：左右两侧平分剩余空间 */
   display: flex;
   flex-direction: column;
   gap: 20px;
   opacity: 0.4;
+  min-width: 120px;        /* 保证装饰物不会被挤压变形 */
+}
+/* 左侧装饰内容靠右对齐（贴近卡片） */
+.side-deco.left {
+  align-items: flex-end;   
+}
+
+/* 右侧装饰内容靠左对齐（贴近卡片） */
+.side-deco.right {
+  align-items: flex-start; 
 }
 .deco-line { width: 1px; height: 100px; background: linear-gradient(to bottom, transparent, #f59e0b, transparent); }
 .deco-data {
@@ -534,6 +538,12 @@ async function handleRegister() {
 }
 
 /* ── 登录卡片 ── */
+.login-wrap {
+  flex: 0 0 440px;         /* 不缩放，固定 440px */
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
 .login-card {
   position: relative;
   background: rgba(13, 16, 23, 0.8);

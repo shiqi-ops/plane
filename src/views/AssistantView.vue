@@ -59,21 +59,20 @@
               <span>AI 智能解读报告</span>
               <div class="hd-actions">
                 <button class="copy-btn" @click="copyText(interpretationText)">复制</button>
-                <button class="copy-btn" @click="exportReport">导出</button>
               </div>
             </div>
             <div class="interp-body structured">
               <div class="interp-section">
                 <h3 class="section-h3">▌ 核心结论 (Core Conclusions)</h3>
-                <p>{{ interpretation.conclusions }}</p>
+                <p>{{ interpretation.core_conclusions }}</p>
               </div>
               <div class="interp-section">
                 <h3 class="section-h3">▌ 弱点分析 (Weakness Analysis)</h3>
-                <p>{{ interpretation.weaknesses }}</p>
+                <p>{{ interpretation.weakness_analysis }}</p>
               </div>
               <div class="interp-section">
                 <h3 class="section-h3">▌ 优化建议 (Optimization Suggestions)</h3>
-                <p>{{ interpretation.suggestions }}</p>
+                <p>{{ interpretation.optimization_suggestions }}</p>
               </div>
             </div>
           </div>
@@ -129,6 +128,7 @@
 <script setup>
 import { ref, computed, nextTick } from 'vue'
 import api from '../api/index.js'
+// import { log } from 'echarts/types/src/util/log.js'
 
 const history = computed(() => {
   try { return JSON.parse(localStorage.getItem('evalHistory') || '[]').reverse() }
@@ -146,47 +146,64 @@ const interpretationText = computed(() => {
          `▌ 弱点分析 (Weakness Analysis)\n${interpretation.value.weaknesses}\n\n` +
          `▌ 优化建议 (Optimization Suggestions)\n${interpretation.value.suggestions}`
 })
-
 async function handleInterpret() {
+  if (!selectedReport.value) return
+  
   interpretLoading.value = true
   interpretation.value = null
+  
   try {
-    // 模拟调用豆包 API 或后端 API
-    // 在真实环境下，这里会发送 selectedReport.value 到后端，由后端调用 AI 模型生成结构化内容
-    const res = await api.post('/assistant/interpret', { report: selectedReport.value })
+    // 1. 获取 result 对象中的 download_url
+    const urlPath = selectedReport.value.result.download_url
     
-    // 假设后端返回结构化数据，如果返回的是字符串，则进行简单的 mock 拆分
-    if (typeof res.data.interpretation === 'object') {
-      interpretation.value = res.data.interpretation
-    } else {
-      // Mock 结构化数据
-      interpretation.value = {
-        conclusions: "模型在当前攻击组合下表现出明显的鲁棒性不足。尽管在清洁数据集上表现良好，但在面对迭代式对抗攻击（如 PGD）时，准确率下降超过 40%，说明模型对于精细扰动非常敏感。",
-        weaknesses: "1. 决策边界过于复杂且不平滑，导致微小扰动即可改变分类结果。\n2. 对高频噪声特征过度依赖，缺乏对图像语义结构的深度提取能力。\n3. 在大 eps 扰动下，模型的对抗样本检测机制完全失效。",
-        suggestions: "1. 引入对抗训练（Adversarial Training），将生成的对抗样本加入训练集。\n2. 使用 TRADES 等鲁棒性损失函数优化训练过程，平衡清洁准确率与对抗鲁棒性。\n3. 在部署前增加输入变换防御层（如 JPEG 压缩或随机调整大小）以过滤高频噪声。"
+    // 2. 按照你的要求拼接前缀
+    // 注意：在 JS 字符串中反斜杠 \ 是转义符，建议使用正斜杠 / 或者双反斜杠 \\
+    const prefix = "D:/java/xiaowebproject/mall/mall/tmp_dir"
+    const fullPath = prefix + urlPath
+
+    // 3. 打印一下拼接结果，确保路径正确
+    console.log('发送给后端的完整路径:', fullPath)
+
+    // 4. 发送请求
+    const res = await api.post('/ai/parse', { 
+      id: String(Date.now()), 
+      messages: fullPath 
+    })
+    
+    // 3. 核心修复：解析后端返回的 JSON 字符串
+    // 假设后端 res.data 直接返回了截图中的 JSON 对象或 JSON 字符串
+    let rawData = res.data
+    
+    // 如果后端返回的是 JSON 字符串，需要解析一次
+    if (typeof rawData === 'string') {
+      try {
+        rawData = JSON.parse(rawData)
+      } catch (e) {
+        console.error("JSON 解析失败", e)
       }
     }
-  } catch {
+
+    // 4. 数据映射：确保字段名与 template 中的 interpretation.core_conclusions 等一致
     interpretation.value = {
-      conclusions: "解读失败，请检查网络连接。",
-      weaknesses: "无法获取分析数据。",
-      suggestions: "请重试或检查后端 API 状态。"
+      core_conclusions: rawData.core_conclusions || "无结论数据",
+      weakness_analysis: rawData.weakness_analysis || "无分析数据",
+      optimization_suggestions: rawData.optimization_suggestions || "无建议数据"
+    }
+
+  } catch (error) {
+    console.error('解读失败:', error)
+    // 修复：去掉未定义的 cleanedText，改为友好提示
+    interpretation.value = {
+      core_conclusions: "解析服务异常，请检查网络或路径是否正确。",
+      weakness_analysis: "无法获取弱点分析。",
+      optimization_suggestions: "建议手动检查原始报告文件。"
     }
   } finally {
     interpretLoading.value = false
   }
 }
 
-function exportReport() {
-  if (!interpretation.value) return
-  const blob = new Blob([interpretationText.value], { type: 'text/plain' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `AI_Interpretation_${selectedReport.value.model}_${Date.now().toString().slice(-4)}.txt`
-  a.click()
-  URL.revokeObjectURL(url)
-}
+
 
 function copyText(text) {
   navigator.clipboard.writeText(text)
@@ -205,34 +222,102 @@ const suggestions = [
   '鲁棒等级 D 意味着什么？',
   '如何提升模型对抗鲁棒性？',
 ]
+let displayContent = "" // 实际显示在界面上的内容
+let bufferContent = ""  // 从后端收到的总内容缓冲区
+let typingTimer = null  // 定时器 ID
 
+function startTyping(aiMsgId) {
+  if (typingTimer) return; // 避免重复启动
+
+  typingTimer = setInterval(() => {
+    // 如果显示内容还没追上缓冲区内容
+    if (displayContent.length < bufferContent.length) {
+      // 每次取出一个字符
+      displayContent += bufferContent.charAt(displayContent.length);
+      
+      // 更新到响应式数组
+      const msg = messages.value.find(m => m.id === aiMsgId);
+      if (msg) {
+        msg.content = displayContent;
+        // 渲染后自动滚动
+        nextTick(() => scrollBottom());
+      }
+    } else {
+      // 如果后端已经传输完毕 (done)，且内容也打完了，才清除定时器
+      // 这里的 isStreamFinished 需要你在 while 循环结束后设为 true
+      if (isStreamFinished) {
+        clearInterval(typingTimer);
+        typingTimer = null;
+      }
+    }
+  }, 50); // 50ms 一个字，可以根据手感调整
+}
 async function sendMsg(text) {
   const content = text || chatInput.value.trim()
   if (!content) return
+  
   chatInput.value = ''
   messages.value.push({ id: ++msgId, role: 'user', content })
   await nextTick(); scrollBottom()
 
+  const aiMsgId = ++msgId
+  messages.value.push({ id: aiMsgId, role: 'ai', content: '' })
   chatLoading.value = true
+
   try {
-  const res = await api.post('/ai/chat_stream', { 
-    id: Date.now().toString(), 
-    messages: content 
-  })
-  
-  messages.value.push({ 
-    id: ++msgId, 
-    role: 'ai', 
-    content: typeof res.data === 'string' ? res.data : res.data.reply 
-  })
-} catch {
-    messages.value.push({ id: ++msgId, role: 'ai', content: '请求失败，请检查后端连接。' })
+    const response = await fetch('http://6ddc7640.r39.cpolar.top/ai/chat_stream', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+      },
+      body: JSON.stringify({
+        id: String(Date.now()),
+        messages: content
+      })
+    })
+
+    if (!response.ok) throw new Error('网络响应错误')
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let done = false
+    let currentAiContent = '' // 内部维护一个变量减少频繁查找
+
+    while (!done) {
+    const { value, done: readerDone } = await reader.read()
+    done = readerDone
+    if (value) {
+      const chunk = decoder.decode(value, { stream: true })
+      const lines = chunk.split('\n')
+      
+      for (const line of lines) {
+        let dataStr = ""
+        if (line.startsWith('data:')) {
+          dataStr = line.replace(/^data:\s*/, '').trim()
+        } else if (line.trim() !== '' && !line.startsWith(':')) {
+          dataStr = line
+        }
+
+        if (dataStr) {
+          // 关键：只更新缓冲区，不直接更新 msg.content
+          bufferContent += dataStr 
+          // 启动打字机
+          startTyping(aiMsgId)
+        }
+      }
+    }
+  }
+  isStreamFinished = true; // 标记后端传输已完成
+  } catch (error) {
+    console.error('流式请求失败:', error)
+    const msg = messages.value.find(m => m.id === aiMsgId)
+    if (msg) msg.content = '回复生成失败，请检查后端连接。'
   } finally {
     chatLoading.value = false
     await nextTick(); scrollBottom()
   }
 }
-
 function scrollBottom() {
   if (chatBox.value) chatBox.value.scrollTop = chatBox.value.scrollHeight
 }
