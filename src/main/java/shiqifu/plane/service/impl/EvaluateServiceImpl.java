@@ -253,6 +253,7 @@ public class EvaluateServiceImpl {
         if(result==null){
             throw new RuntimeException("Python 脚本执行成功但未返回有效的 JSON 结果");
         }
+        result.setDownloadUrl(PdfUtil.pdf(result));
         return result;
     }
 }

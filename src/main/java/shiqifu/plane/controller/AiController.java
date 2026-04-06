@@ -36,8 +36,7 @@ public class AiController {
                 .flatMap(content -> {
                     String[] chars = content.split("");
                     return Flux.fromArray(chars);
-                })
-                ;
+                });
     }
 
     @PostMapping("/parse")

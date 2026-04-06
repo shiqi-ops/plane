@@ -17,7 +17,6 @@ public class AiServiceImpl {
 
         String jsonData = new Gson().toJson(parsedData);
         AiReportVO aiResult = cousultantService.generateSafetyReport(id, jsonData);
-
         return aiResult;
     }
 }
