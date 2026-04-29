@@ -16,8 +16,7 @@ import shiqifu.plane.util.PdfUtil;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class AiServiceImpl {
@@ -29,9 +28,19 @@ public class AiServiceImpl {
     private CousultantService cousultantService;
     private AiReportVO parse(String id,Map<String, Object> result){
         Map<String, Object> parsedData = (Map<String, Object>) result.get("data");
-
+        List<String>parse = (List<String>) parsedData.get("imagePaths");
+        List<byte[]>image=new ArrayList<>();
+        if(parse!=null){
+            for(String path:parse){
+                if(path.contains(".")){
+                    path=path.split(",")[1];
+                }
+                byte[]tmp= Base64.getDecoder().decode(path);
+                image.add(tmp);
+            }
+        }
         String jsonData = new Gson().toJson(parsedData);
-        AiReportVO aiResult = cousultantService.generateSafetyReport(id, jsonData);
+        AiReportVO aiResult = cousultantService.generateSafetyReport(id,jsonData,image);
         return aiResult;
     }
     public AiReportVO parse(String id,String path) throws Exception{

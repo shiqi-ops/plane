@@ -8,6 +8,8 @@ import dev.langchain4j.service.UserMessage;
 import reactor.core.publisher.Flux;
 import shiqifu.plane.entity.vo.AiReportVO;
 
+import java.util.List;
+
 public interface CousultantService {
     @SystemMessage("""
         你是一位无人机视觉安全领域的专家助手。请基于以下核心知识点回答用户问题：
@@ -156,5 +158,6 @@ public interface CousultantService {
         - 请保持专业性，语气客观。
         - 输出内容必须严格对应 JSON 结构，不要包含 Markdown 代码块标记（如 ```json）。
         """)
-    public AiReportVO generateSafetyReport(@MemoryId String id,@UserMessage String reportJson);
+    public AiReportVO generateSafetyReport(@MemoryId String id, @UserMessage
+    String user_message,@UserMessage List<byte[]> use_image);
 }

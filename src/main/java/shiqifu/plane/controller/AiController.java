@@ -39,11 +39,11 @@ public class AiController {
         String id = chatDTO.getId();
         String url=chatDTO.getMessages();
 
-        AiReportVO aiReportVO = aiService.parse(url,id);
+        AiReportVO aiReportVO = aiService.parse(id,url);
         if(aiReportVO==null){
             throw new AiReportException();
         }
-        return null;
+        return aiReportVO;
     }
 
 }

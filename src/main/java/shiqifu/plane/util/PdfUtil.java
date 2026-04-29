@@ -370,64 +370,44 @@ public class PdfUtil {
         } catch (Exception e) {
             result.put("status", "error");
             result.put("message", e.getMessage());
-            e.printStackTrace();
         }
         return result;
     }
 
     private static byte[] readFileFromLocal(String path) throws IOException {
-        return Files.readAllBytes(java.nio.file.Paths.get(path));
+        return Files.readAllBytes(Paths.get(path));
     }
 
     private static String extractText(PDDocument document) throws IOException {
-        org.apache.pdfbox.text.PDFTextStripper stripper = new org.apache.pdfbox.text.PDFTextStripper();
+        PDFTextStripper stripper = new PDFTextStripper();
         return stripper.getText(document);
     }
 
     private static List<String> extractImages(PDDocument document) throws IOException {
-        int imageCount = 0;
-        Set<String> extractedImages = new HashSet<>();
-        List<String> tempFilePaths = new ArrayList<>();
+        int pageCnt=document.getNumberOfPages();
+        List<String> imagePaths = new ArrayList<>();
+        for(int i=0;i<pageCnt;i++){
+            PDPage page=document.getPage(i);//获取页面
+            PDResources resources=page.getResources();//获取资源
+            Iterable<COSName>xos= resources.getXObjectNames();//各个资源
+            for(COSName xo:xos){
+                if(resources.isImageXObject(xo)){
+                    PDImageXObject image=(PDImageXObject)resources.getXObject(xo);
+                    BufferedImage bImage=image.getImage();
+                    try(ByteArrayOutputStream bos=new ByteArrayOutputStream()) {
+                        ImageIO.write(bImage, "png", bos);
+                        byte[] imageBytes=bos.toByteArray();
 
-        int pageCount = document.getNumberOfPages();
-        for (int i = 0; i < pageCount; i++) {
-            PDPage page = document.getPage(i);
-            PDResources resources = page.getResources();
-
-            if (resources == null || resources.getXObjectNames() == null) {
-                continue;
-            }
-
-            for (org.apache.pdfbox.cos.COSName cosName : resources.getXObjectNames()) {
-                if (resources.isImageXObject(cosName)) {
-                    PDImageXObject image = (PDImageXObject) resources.getXObject(cosName);
-                    String imageKey = image.getCOSObject().toString();
-                    if (extractedImages.contains(imageKey)) {
-                        continue;
+                        String base64Image=Base64.getEncoder().encodeToString(imageBytes);
+                        imagePaths.add(base64Image);
                     }
-                    extractedImages.add(imageKey);
-                    BufferedImage bufferedImage = image.getImage();
-                    if (bufferedImage.getType() != BufferedImage.TYPE_INT_RGB &&
-                            bufferedImage.getType() != BufferedImage.TYPE_BYTE_GRAY) {
-                        BufferedImage rgbImage = new BufferedImage(
-                                bufferedImage.getWidth(),
-                                bufferedImage.getHeight(),
-                                BufferedImage.TYPE_INT_RGB
-                        );
-                        rgbImage.createGraphics().drawImage(bufferedImage, 0, 0, null);
-                        bufferedImage = rgbImage;
+                    catch (Exception e) {
+                        throw new IOException(e);
                     }
-                    File tempFile = File.createTempFile("pdf_extract_", "." + image.getSuffix());
-                    tempFile.deleteOnExit();
-                    ImageIO.write(bufferedImage, image.getSuffix(), tempFile);
-
-                    tempFilePaths.add(tempFile.getAbsolutePath());
-
-                    System.out.println("成功提取临时图片: " + tempFile.getAbsolutePath());
                 }
             }
         }
-        return tempFilePaths;
+        return imagePaths;
     }
 
     private static Map<String, String> parseFlightData(String text) {
