@@ -34,12 +34,6 @@ public class CommonConfig {
     @Autowired
     private StreamingChatModel streamingChatModel;
 
-    @Value("${shiqi.ai.base-url}")
-    private String url;
-
-    @Value("${shiqi.ai.api-key}")
-    private String apiKey;
-
     @Bean
     public CousultantService cousultantService(){
        return AiServices.builder(CousultantService.class)

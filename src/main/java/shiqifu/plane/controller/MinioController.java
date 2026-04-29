@@ -18,7 +18,7 @@ public class MinioController {
         this.minioService = minioService;
     }
     @PostMapping("/update")
-    public String Update(MultipartFile file)throws Exception{
+    public String update(MultipartFile file)throws Exception{
         log.info("开始上传");
         String path=minioService.update(file);
         if(path==null){

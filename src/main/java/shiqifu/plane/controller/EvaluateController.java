@@ -10,6 +10,7 @@ import shiqifu.plane.entity.dto.EvaluateOwnDTO;
 import shiqifu.plane.entity.entity.Result;
 import shiqifu.plane.entity.entity.ResultMore;
 import shiqifu.plane.service.impl.EvaluateServiceImpl;
+import shiqifu.plane.service.impl.MinioServiceImpl;
 
 @RestController
 @Slf4j

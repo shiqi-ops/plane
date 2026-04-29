@@ -70,4 +70,16 @@ public class ExceptionHandle {
         log.info(exception.getMessage());
         response.getWriter().write(new ObjectMapper().writeValueAsString(map));
     }
+
+    @ExceptionHandler
+    public void handelException(DownloadException exception,HttpServletResponse response) throws IOException {
+        response.setContentType("application/json;charset=utf-8");
+        response.setStatus(HttpServletResponse.SC_CONFLICT);
+
+        Map<String,Object> map = new HashMap<>();
+        map.put("code",400);
+        map.put("message","获取失败，请输入正确文件名");
+        log.info(exception.getMessage());
+        response.getWriter().write(new ObjectMapper().writeValueAsString(map));
+    }
 }

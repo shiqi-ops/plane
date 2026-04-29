@@ -24,6 +24,7 @@ import org.springframework.web.client.RestTemplate;
 import shiqifu.plane.entity.entity.AttackResult;
 import shiqifu.plane.entity.entity.Result;
 import shiqifu.plane.entity.entity.ResultMore;
+import shiqifu.plane.service.impl.MinioServiceImpl;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -51,7 +52,7 @@ public class PdfUtil {
         Document doc = new Document();
 
         String random=UUID.randomUUID().toString();
-        String fileName = path + random + ".pdf";
+        String fileName = path+random + ".pdf";
         PdfWriter.getInstance(doc, new FileOutputStream(fileName));
         doc.open();
 
@@ -195,7 +196,8 @@ public class PdfUtil {
         doc.add(content14);
 
         doc.close();
-        return "/"+random+".pdf";
+
+        return random+".pdf";
     }
 
     public static String pdf(ResultMore resultMore) throws IOException{
@@ -337,7 +339,7 @@ public class PdfUtil {
         doc.add(image3);
 
         doc.close();
-        return "/"+random+".pdf";
+        return random+".pdf";
     }
 
     public static Map<String, Object> parseByUrl(String sourceUrlOrPath, String imageSaveDir) {

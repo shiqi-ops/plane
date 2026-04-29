@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import shiqifu.plane.exception.DownloadException;
 
 import java.io.InputStream;
 import java.util.UUID;
@@ -41,16 +42,20 @@ public class MinioServiceImpl {
        GetObjectResponse inputStream=minioClient.getObject(
                 GetObjectArgs.builder()
                         .bucket("shiqifu")
-                        .object("path/"+filename)
+                        .object(filename)
                         .build()
         );
+        if(inputStream==null){
+            throw new DownloadException("下载失败，请输入正确文件名");
+        }
         resp.reset();
         resp.setHeader("Content-Disposition", "attachment;filename=" + java.net.URLEncoder.encode(filename, "UTF-8"));
         resp.setContentType("application/octet-stream");
 
         byte[] buffer = new byte[1024];
-        while((inputStream.read(buffer))!=-1){
-            resp.getOutputStream().write(buffer);
+        int bytesRead;
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            resp.getOutputStream().write(buffer, 0, bytesRead);
         }
         inputStream.close();
     }
