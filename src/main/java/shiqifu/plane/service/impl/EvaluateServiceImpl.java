@@ -512,7 +512,7 @@ public class EvaluateServiceImpl {
         );
         return result;
     }
-    public Result own(String model_path,String attack,String dataset,String eps) throws IOException, InterruptedException{
+    public Result own(String model_path,String attack,String dataset,String eps) throws Exception{
         List<String> command=new ArrayList<>();
         command.add(pythonExePath);
         command.add(script_PathOwn);
@@ -575,7 +575,165 @@ public class EvaluateServiceImpl {
         if(result==null){
             throw new RuntimeException("Python 脚本执行成功但未返回有效的 JSON 结果");
         }
-        result.setDownloadUrl(PdfUtil.pdf(result));
+        Document doc = new Document();
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PdfWriter.getInstance(doc, outputStream);
+        doc.open();
+
+        String fontPath = "C://Windows//Fonts//simhei.ttf";
+        BaseFont bf = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+        Font titleFont = new Font(bf, 18, Font.BOLD);
+        Font headingFont = new Font(bf, 14, Font.BOLD);
+        Font normalFont = new Font(bf, 11, Font.NORMAL);
+
+
+        Paragraph title = new Paragraph("无人机视觉模型鲁棒性检测报告", titleFont);
+        title.setAlignment(Paragraph.ALIGN_CENTER);
+        title.setSpacingAfter(10);
+        doc.add(title);
+
+        Paragraph section1 = new Paragraph("一、评测基本信息", headingFont);
+        section1.setSpacingBefore(5);
+        section1.setSpacingAfter(2);
+        doc.add(section1);
+
+        Paragraph content1 = new Paragraph("本次评测对象为无人机视觉模型，采用标准测试数据集进行鲁棒性检测。", normalFont);
+        content1.setSpacingAfter(4);
+        doc.add(content1);
+
+
+        int smallGap = 2;
+        Paragraph subHeading = new Paragraph("测试基本信息：", normalFont);
+        subHeading.setSpacingBefore(smallGap);
+        subHeading.setSpacingAfter(smallGap);
+        doc.add(subHeading);
+
+        Paragraph content2 = new Paragraph("模型名称：" + result.getModel(), normalFont);
+        content2.setSpacingBefore(smallGap);
+        content2.setSpacingAfter(smallGap);
+        doc.add(content2);
+
+        Paragraph content3 = new Paragraph("测试数据集：" + result.getDataset(), normalFont);
+        content3.setSpacingBefore(smallGap);
+        content3.setSpacingAfter(smallGap);
+        doc.add(content3);
+
+        Paragraph content4 = new Paragraph("攻击方法：" + result.getAttack(), normalFont);
+        content4.setSpacingBefore(smallGap);
+        content4.setSpacingAfter(smallGap);
+        doc.add(content4);
+
+        Paragraph content5 = new Paragraph("扰动强度（Eps）：" + result.getEps(), normalFont);
+        content5.setSpacingBefore(smallGap);
+        content5.setSpacingAfter(6);
+        doc.add(content5);
+
+        Paragraph section2 = new Paragraph("二、核心评测结果", headingFont);
+        section2.setSpacingBefore(5);
+        section2.setSpacingAfter(2);
+        doc.add(section2);
+
+        Paragraph subHeading2 = new Paragraph("1. 模型准确率变化", normalFont);
+        subHeading2.setSpacingBefore(4);
+        subHeading2.setSpacingAfter(2);
+        doc.add(subHeading2);
+
+        Paragraph content6 = new Paragraph("清洁准确率（cleanaccuracy）：" + result.getCleanAccuracy(), normalFont);
+        content6.setSpacingBefore(smallGap);
+        content6.setSpacingAfter(smallGap);
+        doc.add(content6);
+
+        Paragraph content7 = new Paragraph("对抗样本准确率（advaccuracy）：" + result.getAdvAccuracy(), normalFont);
+        content7.setSpacingBefore(smallGap);
+        content7.setSpacingAfter(smallGap);
+        doc.add(content7);
+
+        Paragraph content8 = new Paragraph("准确率下降幅度：" + result.getAccuracyDrop(), normalFont);
+        content8.setSpacingBefore(smallGap);
+        content8.setSpacingAfter(6);
+        doc.add(content8);
+
+        Paragraph subHeading3 = new Paragraph("2. 鲁棒性等级评定", normalFont);
+        subHeading3.setSpacingBefore(4);
+        subHeading3.setSpacingAfter(2);
+        doc.add(subHeading3);
+
+        Paragraph content9 = new Paragraph("综合检测结果，模型鲁棒性等级评定为：" + result.getRobustLevel() + "级", normalFont);
+        content9.setSpacingBefore(smallGap);
+        content9.setSpacingAfter(smallGap);
+        doc.add(content9);
+
+
+        Paragraph content10 = new Paragraph("该等级表明模型在面对强对抗扰动时，抗干扰能力一般，仍需通过优化数据增强、调整模型结构等方式进一步提升稳定性。", normalFont);
+        content10.setSpacingBefore(smallGap);
+        content10.setSpacingAfter(6);
+        doc.add(content10);
+
+
+        Paragraph section3 = new Paragraph("三、图像对抗效果检测", headingFont);
+
+        section3.setSpacingBefore(4);
+        section3.setSpacingAfter(2);
+        doc.add(section3);
+
+        Paragraph content11 = new Paragraph("原始图像（original）vs 对抗样本图像（adversarial）", normalFont);
+        content11.setSpacingAfter(2);
+        doc.add(content11);
+
+        Paragraph content12 = new Paragraph("左为未受攻击的标准输入样本，右为扰动后生成的对抗样本。", normalFont);
+
+        content12.setSpacingAfter(2);
+        doc.add(content12);
+
+        Image image1 = Image.getInstance("D:/python/drone-robustness-platform/results/compare.png");
+
+        image1.scaleToFit(340, 240);
+        image1.setAlignment(Image.ALIGN_CENTER);
+
+        image1.setSpacingBefore(0);
+        image1.setSpacingAfter(4);
+        doc.add(image1);
+
+
+        Paragraph section4 = new Paragraph("四、鲁棒性性能曲线分析", headingFont);
+        section4.setSpacingBefore(4);
+        section4.setSpacingAfter(2);
+        doc.add(section4);
+
+        Paragraph content13 = new Paragraph("横轴为扰动强度（eps），纵轴为模型准确率。", normalFont);
+        content13.setSpacingBefore(2);
+        content13.setSpacingAfter(2);
+        doc.add(content13);
+
+        Image image2 = Image.getInstance("D:/python/drone-robustness-platform/results/curve.png");
+
+        image2.scaleToFit(350, 240);
+        image2.setAlignment(Image.ALIGN_CENTER);
+        image2.setSpacingBefore(0);
+        image2.setSpacingAfter(4);
+        doc.add(image2);
+
+
+        Paragraph content14 = new Paragraph("曲线分析显示：随着扰动强度逐步提升，模型准确率呈现下降趋势，说明模型在强对抗环境下的鲁棒性表现不足，对抗强度越高，模型的预测偏差越明显。", normalFont);
+        content14.setSpacingBefore(2);
+        content14.setSpacingAfter(5);
+        doc.add(content14);
+
+        doc.close();
+
+        byte[]bytes=outputStream.toByteArray();
+        String random= UUID.randomUUID().toString();
+        String fileName = "path/"+random + ".pdf";
+        minioClient.putObject(
+                PutObjectArgs.builder()
+                        .bucket("shiqifu")
+                        .object(fileName)
+                        .stream(new ByteArrayInputStream(bytes), bytes.length, -1)
+                        .contentType("application/pdf")
+                        .build()
+        );
+        result.setDownloadUrl(fileName);
         return result;
     }
 }

@@ -3,6 +3,7 @@ package shiqifu.plane.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import shiqifu.plane.annotation.CleanData;
 import shiqifu.plane.annotation.NeedDownloadModel;
 import shiqifu.plane.entity.dto.EvaluateDTO;
 import shiqifu.plane.entity.dto.EvaluateMoreDTO;
@@ -19,6 +20,7 @@ public class EvaluateController {
     @Autowired
     private EvaluateServiceImpl evaluateService;
     @PostMapping("/one")
+    @CleanData
     public Result one(@RequestBody EvaluateDTO evaluateDTO){
         try {
             log.info("开始测试");
@@ -32,11 +34,11 @@ public class EvaluateController {
             return result;
         }
         catch (Exception e){
-            e.printStackTrace();
             throw new RuntimeException("评估失败: " + e.getMessage());
         }
     }
     @PostMapping("/more")
+    @CleanData
     public ResultMore more(@RequestBody EvaluateMoreDTO evaluateMoreDTO){
         try {
             log.info("开始测试");
@@ -49,7 +51,6 @@ public class EvaluateController {
             return result;
         }
         catch (Exception e){
-            e.printStackTrace();
             throw new RuntimeException("评估失败: " + e.getMessage());
         }
     }
@@ -67,7 +68,6 @@ public class EvaluateController {
             return result;
         }
         catch (Exception e){
-            e.printStackTrace();
             throw new RuntimeException("评估失败: " + e.getMessage());
         }
     }

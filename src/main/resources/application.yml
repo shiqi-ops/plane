@@ -51,6 +51,7 @@ langchain4j:
       log-requests: true
       log-responses: true
 
+
 jwt:
   secret: "my-super-secret-key-for-plane-project-must-be-long-enough"
   expiration: 3600000

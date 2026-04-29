@@ -15,7 +15,7 @@ public class LogoutHandle extends SimpleUrlLogoutSuccessHandler {
     public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         if(authentication!=null&&authentication.getPrincipal()!=null){
             String username = authentication.getName();
-            System.out.println("✅ 用户 [" + username + "] 已安全退出！");
+            System.out.println(" 用户 [" + username + "] 已安全退出！");
         }
         this.setDefaultTargetUrl("/login");
 

@@ -82,4 +82,27 @@ public class ExceptionHandle {
         log.info(exception.getMessage());
         response.getWriter().write(new ObjectMapper().writeValueAsString(map));
     }
+
+    @ExceptionHandler
+    public void handelException(DataErrorException exception,HttpServletResponse response) throws IOException {
+        response.setContentType("application/json;charset=utf-8");
+        response.setStatus(HttpServletResponse.SC_CONFLICT);
+
+        Map<String,Object> map = new HashMap<>();
+        map.put("code",400);
+        map.put("message","数据错误，请输入正确的数据");
+        log.info(exception.getMessage());
+        response.getWriter().write(new ObjectMapper().writeValueAsString(map));
+    }
+    @ExceptionHandler
+    public void handelException(AiReportException exception,HttpServletResponse response) throws IOException {
+        response.setContentType("application/json;charset=utf-8");
+        response.setStatus(HttpServletResponse.SC_CONFLICT);
+
+        Map<String,Object> map = new HashMap<>();
+        map.put("code",400);
+        map.put("message","报告生成失败，请重新尝试");
+        log.info(exception.getMessage());
+        response.getWriter().write(new ObjectMapper().writeValueAsString(map));
+    }
 }

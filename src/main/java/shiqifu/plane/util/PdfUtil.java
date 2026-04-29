@@ -342,38 +342,23 @@ public class PdfUtil {
         return random+".pdf";
     }
 
-    public static Map<String, Object> parseByUrl(String sourceUrlOrPath, String imageSaveDir) {
+    public static Map<String, Object> parseByUrl(String path) {
         Map<String, Object> result = new HashMap<>();
         byte[] pdfBytes = null;
 
         try {
-            // 1. 获取文件字节流 (区分本地和网络)
-            if (sourceUrlOrPath.startsWith("http")) {
-                pdfBytes = downloadFileFromWeb(sourceUrlOrPath);
-            } else {
-                pdfBytes = readFileFromLocal(sourceUrlOrPath);
-            }
-
+            pdfBytes = readFileFromLocal(path);
             if (pdfBytes == null || pdfBytes.length == 0) {
                 result.put("error", "文件内容为空");
                 return result;
             }
 
-            // 2. 创建图片保存目录
-            createDirectories(imageSaveDir);
+            try (PDDocument document = Loader.loadPDF(pdfBytes)) {
+                System.out.println("文档加载成功，共 " + document.getNumberOfPages() + " 页");
 
-            // 3. 使用 PDFBox 3.x 正确加载文档
-            // 关键修复点：使用 RandomAccessReadBuffer 包装 ByteArrayInputStream
-            try (ByteArrayInputStream bais = new ByteArrayInputStream(pdfBytes);
-                 RandomAccessReadBuffer randomAccessRead = new RandomAccessReadBuffer(bais);
-                 PDDocument document = Loader.loadPDF(randomAccessRead)) {
+                List<String> imagePaths = extractImages(document);
+                result.put("imagePaths", imagePaths);
 
-                System.out.println("✅ 文档加载成功，共 " + document.getNumberOfPages() + " 页");
-
-                // 4. 提取图片
-                extractImages(document, imageSaveDir);
-
-                // 5. 提取并解析文本
                 String text = extractText(document);
                 Map<String, String> parsedData = parseFlightData(text);
 
@@ -383,67 +368,71 @@ public class PdfUtil {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
             result.put("status", "error");
             result.put("message", e.getMessage());
+            e.printStackTrace();
         }
         return result;
     }
 
-    // --- 辅助方法 ---
-
-    /** 读取本地文件 */
     private static byte[] readFileFromLocal(String path) throws IOException {
-        Path filePath = Paths.get(path);
-        return Files.readAllBytes(filePath);
+        return Files.readAllBytes(java.nio.file.Paths.get(path));
     }
 
-    /** 下载网络文件 (使用 Java 11+ HttpClient) */
-    private static byte[] downloadFileFromWeb(String url) throws IOException, InterruptedException {
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .GET()
-                .build();
-
-        HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
-        if (response.statusCode() == 200) {
-            return response.body();
-        }
-        return null;
-    }
-
-    /** 创建目录 */
-    private static void createDirectories(String dirPath) throws IOException {
-        Path path = Paths.get(dirPath);
-        if (!Files.exists(path)) {
-            Files.createDirectories(path);
-        }
-    }
-
-    /** 提取文本 */
     private static String extractText(PDDocument document) throws IOException {
-        PDFTextStripper stripper = new PDFTextStripper();
+        org.apache.pdfbox.text.PDFTextStripper stripper = new org.apache.pdfbox.text.PDFTextStripper();
         return stripper.getText(document);
     }
 
-    /** 提取图片 */
-    private static void extractImages(PDDocument document, String imageSaveDir) throws IOException {
-        PDFRenderer renderer = new PDFRenderer(document);
+    private static List<String> extractImages(PDDocument document) throws IOException {
+        int imageCount = 0;
+        Set<String> extractedImages = new HashSet<>();
+        List<String> tempFilePaths = new ArrayList<>();
+
         int pageCount = document.getNumberOfPages();
         for (int i = 0; i < pageCount; i++) {
-            BufferedImage image = renderer.renderImageWithDPI(i, 300, ImageType.RGB);
-            String fileName = "page_" + (i + 1) + ".jpg";
-            File outputFile = new File(imageSaveDir, fileName);
-            ImageIO.write(image, "jpg", outputFile);
+            PDPage page = document.getPage(i);
+            PDResources resources = page.getResources();
+
+            if (resources == null || resources.getXObjectNames() == null) {
+                continue;
+            }
+
+            for (org.apache.pdfbox.cos.COSName cosName : resources.getXObjectNames()) {
+                if (resources.isImageXObject(cosName)) {
+                    PDImageXObject image = (PDImageXObject) resources.getXObject(cosName);
+                    String imageKey = image.getCOSObject().toString();
+                    if (extractedImages.contains(imageKey)) {
+                        continue;
+                    }
+                    extractedImages.add(imageKey);
+                    BufferedImage bufferedImage = image.getImage();
+                    if (bufferedImage.getType() != BufferedImage.TYPE_INT_RGB &&
+                            bufferedImage.getType() != BufferedImage.TYPE_BYTE_GRAY) {
+                        BufferedImage rgbImage = new BufferedImage(
+                                bufferedImage.getWidth(),
+                                bufferedImage.getHeight(),
+                                BufferedImage.TYPE_INT_RGB
+                        );
+                        rgbImage.createGraphics().drawImage(bufferedImage, 0, 0, null);
+                        bufferedImage = rgbImage;
+                    }
+                    File tempFile = File.createTempFile("pdf_extract_", "." + image.getSuffix());
+                    tempFile.deleteOnExit();
+                    ImageIO.write(bufferedImage, image.getSuffix(), tempFile);
+
+                    tempFilePaths.add(tempFile.getAbsolutePath());
+
+                    System.out.println("成功提取临时图片: " + tempFile.getAbsolutePath());
+                }
+            }
         }
+        return tempFilePaths;
     }
 
-    /** 解析数据 */
     private static Map<String, String> parseFlightData(String text) {
         Map<String, String> data = new HashMap<>();
         if (text == null) return data;
-        // 你的正则逻辑...
         Pattern datePattern = Pattern.compile("(\\d{4}-\\d{2}-\\d{2})");
         Matcher dateMatcher = datePattern.matcher(text);
         if (dateMatcher.find()) {

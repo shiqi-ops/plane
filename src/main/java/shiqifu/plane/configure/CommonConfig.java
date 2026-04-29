@@ -24,6 +24,8 @@ import org.springframework.context.annotation.Configuration;
 import shiqifu.plane.mapper.RedisChatMemoryStore;
 import shiqifu.plane.service.CousultantService;
 
+import java.util.List;
+
 
 @Configuration
 public class CommonConfig {
@@ -33,9 +35,9 @@ public class CommonConfig {
     private RedisChatMemoryStore store;
     @Autowired
     private StreamingChatModel streamingChatModel;
-
     @Bean
     public CousultantService cousultantService(){
+
        return AiServices.builder(CousultantService.class)
                .chatModel(model)
                .streamingChatModel(streamingChatModel)

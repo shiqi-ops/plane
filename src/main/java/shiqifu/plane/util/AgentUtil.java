@@ -17,6 +17,7 @@ public class AgentUtil {
     public AgentResult entry(AgentVO agentVO ){
         String json=new Gson().toJson(agentVO);
         String agent1_analysis=cousultantService.agent1(defaultID,json);
+
         String agent2_analysis= cousultantService.agent2(defaultID,json,
                 agent1_analysis);
         String agent3_analysis=cousultantService.agent3(defaultID,json,
