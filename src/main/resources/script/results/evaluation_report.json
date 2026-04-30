@@ -1,0 +1,10 @@
+{
+    "model_path": "C:\\Users\\31818\\AppData\\Local\\Temp\\upload_12674867812021381798c1036f8e-3190-4404-8245-171b7dd2da27.pth",
+    "dataset": "drone_dataset",
+    "dataset_size": 1044,
+    "attack": "FGSM",
+    "clean_accuracy": 0.7068965517241379,
+    "adv_accuracy": 0.23084291187739464,
+    "accuracy_drop": 0.47605363984674326,
+    "attack_success_rate": 0.7691570881226053
+}
