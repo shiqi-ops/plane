@@ -1,0 +1,13 @@
+{
+    "model": "resnet18",
+    "dataset": "drone_dataset",
+    "attack": "FGSM",
+    "eps": 0.03,
+    "clean_accuracy": 0.7068965517241379,
+    "adv_accuracy": 0.23084291187739464,
+    "accuracy_drop": 0.47605363984674326,
+    "robust_score": 0.3265582655826558,
+    "robust_level": "D",
+    "curve_path": "../results/curve.png",
+    "compare_path": "../results/compare.png"
+}
