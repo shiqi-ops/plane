@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import shiqifu.plane.entity.entity.AttackResult;
 import shiqifu.plane.entity.entity.Result;
 import shiqifu.plane.entity.entity.ResultMore;
-import shiqifu.plane.util.PdfUtil;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -33,19 +32,22 @@ public class EvaluateServiceImpl {
         this.minioClient = minioClient;
     }
     private final Gson gson = new Gson();
-    private final String pythonExePath = "D://download//drone-robustness-platform//Scripts//python.exe";
-    private final String script_Path = "D://python//drone-robustness-platform//attack_engine//evaluate_one.py";
-    private final String workingDirectory = "D:/python//drone-robustness-platform//attack_engine";
-    private final String script_PathMore="D://python//drone-robustness-platform//attack_engine//evaluate_more.py";
-    private final String script_PathOwn="D://python//drone-robustness-platform//attack_engine//evaluate_own.py";
-    private final String image_1="D:/python/drone-robustness-platform/results/attack_bar.png";
-    private final String image_2="D:/python/drone-robustness-platform/results/robustness_curve.png";
-    private final String image_3="D:/python/drone-robustness-platform/results/attack_heatmap.png";
-    private final String image_4="D:/python/drone-robustness-platform/results/attack_bubble.png";
+    private final String pythonExePath = "\\src\\main\\resources\\script\\python_env\\scripts\\python.exe";
+    private final String script_Path = "\\src\\main\\resources\\script\\attack_engine\\evaluate_one.py";
+    private final String workingDirectory = "\\src\\main\\resources\\script\\attack_engine";
+    private final String script_PathMore = "\\src\\main\\resources\\script\\attack_engine\\evaluate_more.py";
+    private final String script_PathOwn = "\\src\\main\\resources\\script\\attack_engine\\evaluate_own.py";
+    private final String image_1 = "\\src\\main\\resources\\script\\results\\attack_bar.png";
+    private final String image_2 = "\\src\\main\\resources\\script\\results\\robustness_curve.png";
+    private final String image_3 = "\\src\\main\\resources\\script\\results\\attack_heatmap.png";
+    private final String image_4 = "\\src\\main\\resources\\script\\results\\attack_bubble.png";
+    private final String image_5 = "\\src\\main\\resources\\script\\results\\compare.png";
+    private final String image_6 = "\\src\\main\\resources\\script\\results\\curve.png";
     public Result one(String model,String attack,String dataset,String eps) throws Exception{
+        String root=System.getProperty("user.dir")+"\\plane";
         List<String> command=new ArrayList<>();
-        command.add(pythonExePath);
-        command.add(script_Path);
+        command.add(root+pythonExePath);
+        command.add(root+script_Path);
         command.add("--model");
         command.add(model);
         command.add("--dataset");
@@ -56,7 +58,7 @@ public class EvaluateServiceImpl {
         command.add(String.valueOf(eps));
 
         ProcessBuilder pb=new ProcessBuilder(command);
-        pb.directory(new File(workingDirectory));
+        pb.directory(new File(root+workingDirectory));
         pb.redirectErrorStream(true);
         Process p=pb.start();
         Result result=new Result();
@@ -100,11 +102,11 @@ public class EvaluateServiceImpl {
                 }
                 jsonFind=true;
             }
-            byte[]file1= Files.readAllBytes(Paths.get("D:/python/drone-robustness-platform/results/compare.png"));
+            byte[]file1= Files.readAllBytes(Paths.get(root+image_5));
             String base1=Base64.getEncoder().encodeToString(file1);
             String finalBase1="data:" + "image1/png" + ";base64," + base1;
             result.setComparePath(finalBase1);
-            byte[]file2=Files.readAllBytes(Paths.get("D:/python/drone-robustness-platform/results/curve.png"));
+            byte[]file2=Files.readAllBytes(Paths.get(root+image_6));
             String base2=Base64.getEncoder().encodeToString(file2);
             String finalBase2="data:" + "image2/png" + ";base64," + base2;
             result.setCurvePath(finalBase2);
@@ -232,7 +234,7 @@ public class EvaluateServiceImpl {
         content12.setSpacingAfter(2);
         doc.add(content12);
 
-        Image image1 = Image.getInstance("D:/python/drone-robustness-platform/results/compare.png");
+        Image image1 = Image.getInstance(root+image_5);
 
         image1.scaleToFit(340, 240);
         image1.setAlignment(Image.ALIGN_CENTER);
@@ -252,7 +254,7 @@ public class EvaluateServiceImpl {
         content13.setSpacingAfter(2);
         doc.add(content13);
 
-        Image image2 = Image.getInstance("D:/python/drone-robustness-platform/results/curve.png");
+        Image image2 = Image.getInstance(root+image_6);
 
         image2.scaleToFit(350, 240);
         image2.setAlignment(Image.ALIGN_CENTER);
@@ -283,9 +285,10 @@ public class EvaluateServiceImpl {
         return result;
     }
     public ResultMore more(String model, String attack_group, String dataset, String eps) throws Exception{
+        String root=System.getProperty("user.dir")+"\\plane";
         List<String> command=new ArrayList<>();
-        command.add(pythonExePath);
-        command.add(script_PathMore);
+        command.add(root+pythonExePath);
+        command.add(root+script_PathMore);
         command.add("--model");
         command.add(model);
         command.add("--dataset");
@@ -296,7 +299,7 @@ public class EvaluateServiceImpl {
         command.add(String.valueOf(eps));
 
         ProcessBuilder pb=new ProcessBuilder(command);
-        pb.directory(new File(workingDirectory));
+        pb.directory(new File(root+workingDirectory));
         pb.redirectErrorStream(true);
         Process p=pb.start();
         ResultMore result=null;
@@ -333,19 +336,19 @@ public class EvaluateServiceImpl {
             }
             if(jsonFind) {
                 result = gson.fromJson(jsonBuffer.toString(), ResultMore.class);
-                byte[]file1= Files.readAllBytes(Paths.get(image_1));
+                byte[]file1= Files.readAllBytes(Paths.get(root+image_1));
                 String base1=Base64.getEncoder().encodeToString(file1);
                 String finalBase1="data:" + "image1/png" + ";base64," + base1;
                 result.setAttackBar(finalBase1);
-                byte[]file2= Files.readAllBytes(Paths.get(image_2));
+                byte[]file2= Files.readAllBytes(Paths.get(root+image_2));
                 String base2=Base64.getEncoder().encodeToString(file2);
                 String finalBase2="data:" + "image2/png" + ";base64," + base2;
                 result.setRobustnessCurve(finalBase2);
-                byte[]file3= Files.readAllBytes(Paths.get(image_3));
+                byte[]file3= Files.readAllBytes(Paths.get(root+image_3));
                 String base3=Base64.getEncoder().encodeToString(file3);
                 String finalBase3="data:" + "image3/png" + ";base64," + base3;
                 result.setAttackHeatmap(finalBase3);
-                byte[]file4= Files.readAllBytes(Paths.get(image_4));
+                byte[]file4= Files.readAllBytes(Paths.get(root+image_4));
                 String base4=Base64.getEncoder().encodeToString(file4);
                 String finalBase4="data:" + "image4/png" + ";base64," + base4;
                 result.setAttackBubble(finalBase4);
@@ -513,9 +516,10 @@ public class EvaluateServiceImpl {
         return result;
     }
     public Result own(String model_path,String attack,String dataset,String eps) throws Exception{
+        String root=System.getProperty("user.dir")+"\\plane";
         List<String> command=new ArrayList<>();
-        command.add(pythonExePath);
-        command.add(script_PathOwn);
+        command.add(root+pythonExePath);
+        command.add(root+script_PathOwn);
         command.add("--model_path");
         command.add(model_path);
         command.add("--dataset");
@@ -526,7 +530,7 @@ public class EvaluateServiceImpl {
         command.add(String.valueOf(eps));
 
         ProcessBuilder pb=new ProcessBuilder(command);
-        pb.directory(new File(workingDirectory));
+        pb.directory(new File(root+workingDirectory));
         pb.redirectErrorStream(true);
         Process p=pb.start();
         Result result=null;
@@ -686,7 +690,7 @@ public class EvaluateServiceImpl {
         content12.setSpacingAfter(2);
         doc.add(content12);
 
-        Image image1 = Image.getInstance("D:/python/drone-robustness-platform/results/compare.png");
+        Image image1 = Image.getInstance(root+image_5);
 
         image1.scaleToFit(340, 240);
         image1.setAlignment(Image.ALIGN_CENTER);
@@ -706,7 +710,7 @@ public class EvaluateServiceImpl {
         content13.setSpacingAfter(2);
         doc.add(content13);
 
-        Image image2 = Image.getInstance("D:/python/drone-robustness-platform/results/curve.png");
+        Image image2 = Image.getInstance(root+image_6);
 
         image2.scaleToFit(350, 240);
         image2.setAlignment(Image.ALIGN_CENTER);

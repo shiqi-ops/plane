@@ -1,7 +1,11 @@
 package shiqifu.plane.configure;
 
 import dev.langchain4j.data.document.Document;
+import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.loader.ClassPathDocumentLoader;
+import dev.langchain4j.data.document.parser.TextDocumentParser;
+import dev.langchain4j.data.document.splitter.DocumentSplitters;
+import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -17,6 +21,8 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -24,9 +30,11 @@ import org.springframework.context.annotation.Configuration;
 import shiqifu.plane.mapper.RedisChatMemoryStore;
 import shiqifu.plane.service.CousultantService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
+@Slf4j
 @Configuration
 public class CommonConfig {
     @Autowired
@@ -35,6 +43,11 @@ public class CommonConfig {
     private RedisChatMemoryStore store;
     @Autowired
     private StreamingChatModel streamingChatModel;
+    @Value("${shiqi.ai.api-key}")
+    private String key;
+    @Value("${shiqi.ai.base-url}")
+    private String url;
+
     @Bean
     public CousultantService cousultantService(){
 

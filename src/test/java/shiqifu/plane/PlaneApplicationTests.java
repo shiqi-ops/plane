@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.io.File;
 import java.io.FileOutputStream;
 
 
@@ -22,6 +23,11 @@ class PlaneApplicationTests {
     private OpenAiChatModel openAiChatModel;
 
     private MinioClient client;
+    @Test
+    void contextLoads() {
+        String root=System.getProperty("user.dir");
+        System.out.println(root);
+    }
     @Test
     void contextLoads2() throws Exception{
         String path="path/my-apps.json";
