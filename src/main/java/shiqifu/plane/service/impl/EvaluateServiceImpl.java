@@ -11,10 +11,7 @@ import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import shiqifu.plane.entity.entity.AttackResult;
-import shiqifu.plane.entity.entity.Bubble;
-import shiqifu.plane.entity.entity.Result;
-import shiqifu.plane.entity.entity.ResultMore;
+import shiqifu.plane.entity.entity.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -497,7 +494,7 @@ public class EvaluateServiceImpl {
         content8.setSpacingAfter(smallGap);
         doc.add(content8);
 
-        Image image1=Image.getInstance(image_1);
+        Image image1=Image.getInstance(root+image_1);
         image1.scaleToFit(340, 240);
         image1.setAlignment(Image.ALIGN_CENTER);
 
@@ -512,7 +509,7 @@ public class EvaluateServiceImpl {
         content9.setSpacingAfter(smallGap);
         doc.add(content9);
 
-        Image image2=Image.getInstance(image_2);
+        Image image2=Image.getInstance(root+image_2);
         image2.scaleToFit(340, 240);
         image2.setAlignment(Image.ALIGN_CENTER);
 
@@ -527,7 +524,7 @@ public class EvaluateServiceImpl {
         content10.setSpacingAfter(smallGap);
         doc.add(content10);
 
-        Image image3=Image.getInstance(image_3);
+        Image image3=Image.getInstance(root+image_3);
 
         image3.scaleToFit(340, 240);
         image3.setAlignment(Image.ALIGN_CENTER);
@@ -541,7 +538,7 @@ public class EvaluateServiceImpl {
         content14.setSpacingAfter(smallGap);
         doc.add(content14);
 
-        Image image4=Image.getInstance(image_4);
+        Image image4=Image.getInstance(root+image_4);
         image4.setAlignment(Image.ALIGN_CENTER);
 
         image4.setSpacingBefore(0);
@@ -551,7 +548,7 @@ public class EvaluateServiceImpl {
         Paragraph content15=new Paragraph("攻击方式:"+one2.getAttack()+"\n"+
         "查询时间:"+one2.getQueryTime()+"\n"+
                 "成功率:"+one2.getSuccessRate()+"\n"+
-                "eps:"+one2.getEps());
+                "eps:"+one2.getEps(),normalFont);
         content15.setSpacingBefore(smallGap);
         content15.setSpacingAfter(smallGap);
         doc.add(content15);
@@ -559,7 +556,7 @@ public class EvaluateServiceImpl {
         Paragraph content16=new Paragraph("攻击方式:"+two2.getAttack()+"\n"+
                 "查询时间:"+two2.getQueryTime()+"\n"+
                 "成功率:"+two2.getSuccessRate()+"\n"+
-                "eps:"+two2.getEps());
+                "eps:"+two2.getEps(),normalFont);
         content16.setSpacingBefore(smallGap);
         content16.setSpacingAfter(smallGap);
         doc.add(content16);
@@ -567,7 +564,7 @@ public class EvaluateServiceImpl {
         Paragraph content17=new Paragraph("攻击方式:"+one2.getAttack()+"\n"+
                 "查询时间:"+three2.getQueryTime()+"\n"+
                 "成功率:"+three2.getSuccessRate()+"\n"+
-                "eps:"+three2.getEps());
+                "eps:"+three2.getEps(),normalFont);
         content17.setSpacingBefore(smallGap);
         content17.setSpacingAfter(smallGap);
         doc.add(content17);
@@ -586,7 +583,7 @@ public class EvaluateServiceImpl {
         );
         return result;
     }
-    public Result own(String model_path,String attack,String dataset,String eps) throws Exception{
+    public ResultOwn own(String model_path, String attack, String dataset, String eps) throws Exception{
         String root=System.getProperty("user.dir")+"\\plane";
         List<String> command=new ArrayList<>();
         command.add(root+pythonExePath);
@@ -604,7 +601,7 @@ public class EvaluateServiceImpl {
         pb.directory(new File(root+workingDirectory));
         pb.redirectErrorStream(true);
         Process p=pb.start();
-        Result result=null;
+        ResultOwn result=null;
         boolean jsonFind=false;
         boolean jsonIn=false;
         StringBuilder jsonBuffer = new StringBuilder();
@@ -613,31 +610,50 @@ public class EvaluateServiceImpl {
             String line;
             while ((line=br.readLine())!=null) {
                 System.out.println(line);
-                if(line.startsWith("{")) {
-                    if(count==0){
-                        jsonIn=true;
-                        count=1;
-                        jsonBuffer.append(line);
-                        jsonFind=true;
-                    }else{
-                        count++;
-                        jsonBuffer.append(line);
-                    }
-                }else if(jsonIn==true){
-                    jsonBuffer.append(line);
-                }else if(line.endsWith("}")) {
-                    if(count==1){
-                        jsonIn=false;
-                        count=0;
-                        jsonBuffer.append(line);
-                    }else{
-                        count--;
-                        jsonBuffer.append(line);
-                    }
+                String trimLine=line.trim();
+                if (trimLine.startsWith("model_path")) {
+                    result.setModelPath(trimLine.substring(trimLine.indexOf(" ") + 1));
                 }
-            }
-            if(jsonFind) {
-                result = gson.fromJson(jsonBuffer.toString(), Result.class);
+                else if (trimLine.startsWith("dataset")) {
+                    result.setDataset(trimLine.substring(trimLine.indexOf(" ") + 1));
+                }
+                else if (trimLine.startsWith("dataset_size")) {
+                    result.setAttack(trimLine.substring(trimLine.indexOf(" ") + 1));
+                }
+                else if(trimLine.startsWith("attack")) {
+                    result.setAttack(trimLine.substring(trimLine.indexOf(" ") + 1));
+                }
+                else if (trimLine.startsWith("eps")) {
+                    String val = trimLine.substring(trimLine.indexOf(" ") + 1).trim();
+                    result.setEps(Double.parseDouble(val));
+                }
+                else if (trimLine.startsWith("clean_accuracy")) {
+                    String val = trimLine.substring(trimLine.indexOf(" ") + 1).trim();
+                    result.setCleanAccuracy(Double.parseDouble(val));
+                }
+                else if (trimLine.startsWith("adv_accuracy")) {
+                    String val = trimLine.substring(trimLine.indexOf(" ") + 1).trim();
+                    result.setAdvAccuracy(Double.parseDouble(val));
+                }
+                else if (trimLine.startsWith("accuracy_drop")) {
+                    String val = trimLine.substring(trimLine.indexOf(" ") + 1).trim();
+                    result.setAccuracyDrop(Double.parseDouble(val));
+                }else if(trimLine.startsWith("attack_success_rate")) {
+                    String val = trimLine.substring(trimLine.indexOf(" ") + 1).trim();
+                    result.setAttackSuccessRate(Double.parseDouble(val));
+                }
+                else if(trimLine.startsWith("attack_time")){
+                    String val = trimLine.substring(trimLine.indexOf(" ") + 1).trim();
+                    result.setAttackTime(Double.parseDouble(val));
+                }
+                else if (trimLine.startsWith("robustness_level")) {
+                    result.setRobustLevel(trimLine.substring(trimLine.indexOf(" ") + 1));
+                }
+                else if (trimLine.startsWith("robust_score")) {
+                    String val = trimLine.substring(trimLine.indexOf(" ") + 1).trim();
+                    result.setRobustScore(Double.parseDouble(val));
+                }
+                jsonFind=true;
             }
         }
         int exitCode=p.waitFor();
@@ -684,7 +700,7 @@ public class EvaluateServiceImpl {
         subHeading.setSpacingAfter(smallGap);
         doc.add(subHeading);
 
-        Paragraph content2 = new Paragraph("模型名称：" + result.getModel(), normalFont);
+        Paragraph content2 = new Paragraph("模型位置：" + result.getModelPath(), normalFont);
         content2.setSpacingBefore(smallGap);
         content2.setSpacingAfter(smallGap);
         doc.add(content2);
@@ -693,6 +709,11 @@ public class EvaluateServiceImpl {
         content3.setSpacingBefore(smallGap);
         content3.setSpacingAfter(smallGap);
         doc.add(content3);
+
+        Paragraph content14=new Paragraph("数据集大小 "+result.getDataset(), normalFont);
+        content14.setSpacingBefore(smallGap);
+        content14.setSpacingAfter(smallGap);
+        doc.add(content14);
 
         Paragraph content4 = new Paragraph("攻击方法：" + result.getAttack(), normalFont);
         content4.setSpacingBefore(smallGap);
@@ -728,6 +749,11 @@ public class EvaluateServiceImpl {
         content8.setSpacingBefore(smallGap);
         content8.setSpacingAfter(6);
         doc.add(content8);
+
+        Paragraph content15=new Paragraph("攻击成功准确率: "+result.getRobustLevel(), normalFont);
+        content15.setSpacingBefore(smallGap);
+        content15.setSpacingAfter(6);
+        doc.add(content15);
 
         Paragraph subHeading3 = new Paragraph("2. 鲁棒性等级评定", normalFont);
         subHeading3.setSpacingBefore(4);
@@ -790,10 +816,10 @@ public class EvaluateServiceImpl {
         doc.add(image2);
 
 
-        Paragraph content14 = new Paragraph("曲线分析显示：随着扰动强度逐步提升，模型准确率呈现下降趋势，说明模型在强对抗环境下的鲁棒性表现不足，对抗强度越高，模型的预测偏差越明显。", normalFont);
-        content14.setSpacingBefore(2);
-        content14.setSpacingAfter(5);
-        doc.add(content14);
+        Paragraph content16 = new Paragraph("曲线分析显示：随着扰动强度逐步提升，模型准确率呈现下降趋势，说明模型在强对抗环境下的鲁棒性表现不足，对抗强度越高，模型的预测偏差越明显。", normalFont);
+        content16.setSpacingBefore(2);
+        content16.setSpacingAfter(5);
+        doc.add(content16);
 
         doc.close();
 

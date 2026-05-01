@@ -17,4 +17,6 @@ public class AgentResult {
     private String agent2_analysis;
     @SerializedName("final_report")
     private String final_report;
+    @SerializedName("download_url")
+    private String download_url;
 }

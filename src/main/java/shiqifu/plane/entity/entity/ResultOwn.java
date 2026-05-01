@@ -41,4 +41,7 @@ public class ResultOwn {
 
     @SerializedName("robust_level")
     private String robustLevel;
+
+    @SerializedName("down_url")
+    private String downloadUrl;
 }
