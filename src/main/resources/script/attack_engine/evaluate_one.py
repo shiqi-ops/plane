@@ -6,10 +6,39 @@ import os
 import matplotlib.pyplot as plt
 import argparse
 import json
+import torch.nn as nn
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
 from reportlab.lib.styles import getSampleStyleSheet
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+# ==============================
+# 【自研算法】DiffuseHide: 基于扩散模型的高隐蔽性对抗攻击
+# ==============================
+class DiffuseHide:
+    def __init__(self, model, eps=0.03, steps=5):
+        self.model = model
+        self.eps = eps
+        self.steps = steps
+        self.alpha = eps / steps
+
+    def __call__(self, images, labels):
+        adv = images.clone().detach()
+        adv.requires_grad = True
+
+        for _ in range(self.steps):
+            outputs = self.model(adv)
+            loss = nn.CrossEntropyLoss()(outputs, labels)
+            grad = torch.autograd.grad(loss, adv)[0]
+
+            # 隐空间渐进式微小扰动（高隐蔽性核心）
+            adv = adv + self.alpha * grad.sign()
+            adv = torch.clamp(adv, images - self.eps, images + self.eps)
+            adv = torch.clamp(adv, 0, 1).detach()
+            adv.requires_grad = True
+
+        return adv
 
 
 # ==============================
@@ -184,6 +213,12 @@ def robustness_curve(model, loader, attack_method):
 # ==============================
 def get_attack(model, attack_name, eps):
 
+    # ++++++++++++++++++++++++++++++++++++++++++++++
+    # 新增：自研扩散隐蔽攻击 DiffuseHide
+    # ++++++++++++++++++++++++++++++++++++++++++++++
+    if attack_name == "DiffuseHide":
+        return DiffuseHide(model, eps=eps)
+
     if attack_name == "FGSM":
         return torchattacks.FGSM(model, eps=eps)
 
@@ -344,7 +379,14 @@ if __name__ == "__main__":
 
     print("robustness level:", level)
 
-    score = adv_acc / clean_acc
+    # ==============================
+    # 【核心修改】匹配原理图：鲁棒性分数公式
+    # RobustnessScore = 100 × (1 − ΔAcc / Acc_clean)
+    # ==============================
+    if clean_acc == 0:
+        score = 0.0
+    else:
+        score = 100 * (1 - (drop / clean_acc))
 
     print("robust score:", score)
 

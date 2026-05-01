@@ -20,4 +20,7 @@ public class AttackResult {
 
     @SerializedName("attack_success_rate")
     private Double attackSuccessRate;
+
+    @SerializedName("query_time")
+    private Double queryTime;
 }

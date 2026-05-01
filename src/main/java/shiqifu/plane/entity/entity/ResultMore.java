@@ -21,11 +21,9 @@ public class ResultMore {
     @SerializedName("clean_accuracy")
     private Double cleanAccuracy;
 
-    // 对应 JSON 中的 "attack_results" 数组
     @SerializedName("attack_results")
     private List<AttackResult> attackResults;
 
-    // 对应 JSON 中的 "ranking" 数组
     @SerializedName("ranking")
     private List<AttackResult> ranking;
 
@@ -34,6 +32,9 @@ public class ResultMore {
 
     @SerializedName("robust_level")
     private String robustLevel;
+
+    @SerializedName("bubble_data")
+    private List<Bubble> bubbleData;
 
     @SerializedName("robustness_curve")
     private String robustnessCurve;

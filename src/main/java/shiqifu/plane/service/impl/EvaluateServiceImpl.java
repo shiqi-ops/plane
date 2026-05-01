@@ -12,6 +12,7 @@ import io.minio.PutObjectArgs;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import shiqifu.plane.entity.entity.AttackResult;
+import shiqifu.plane.entity.entity.Bubble;
 import shiqifu.plane.entity.entity.Result;
 import shiqifu.plane.entity.entity.ResultMore;
 
@@ -381,6 +382,14 @@ public class EvaluateServiceImpl {
         AttackResult one=list.get(0);
         AttackResult two=list.get(1);
         AttackResult three=list.get(2);
+        List<AttackResult>list1=result.getRanking();
+        AttackResult one1=list1.get(0);
+        AttackResult two1=list1.get(1);
+        AttackResult three1=list1.get(2);
+        List<Bubble>list2=result.getBubbleData();
+        Bubble one2=list2.get(0);
+        Bubble two2=list2.get(1);
+        Bubble three2=list2.get(2);
         String attack=one.getAttack()+","+two.getAttack()+","+three.getAttack();
 
         Paragraph title = new Paragraph("无人机视觉模型鲁棒性检测报告",titleFont);
@@ -426,7 +435,7 @@ public class EvaluateServiceImpl {
         content4.setSpacingAfter(smallGap);
         doc.add(content4);
 
-        Paragraph content5=new Paragraph(one.getAttack()+"\n"
+        Paragraph content5=new Paragraph(two.getAttack()+"\n"
                 +"对抗样本准确率 "+two.getAdvAccuracy()+"\n"+
                 "准确率下降幅度 "+two.getAccuracyDrop()+"\n"+
                 "攻击成功率 "+two.getAttackSuccessRate(),normalFont);
@@ -434,7 +443,7 @@ public class EvaluateServiceImpl {
         content5.setSpacingAfter(smallGap);
         doc.add(content5);
 
-        Paragraph content6=new Paragraph(one.getAttack()+"\n"
+        Paragraph content6=new Paragraph(three.getAttack()+"\n"
                 +"对抗样本准确率 "+three.getAdvAccuracy()+"\n"+
                 "准确率下降幅度 "+three.getAccuracyDrop()+"\n"+
                 "攻击成功率 "+three.getAttackSuccessRate(),normalFont);
@@ -442,13 +451,39 @@ public class EvaluateServiceImpl {
         content6.setSpacingAfter(smallGap);
         doc.add(content6);
 
+        Paragraph content11=new Paragraph(one1.getAttack()+"\n"
+                +"对抗样本准确率 "+one1.getAdvAccuracy()+"\n"+
+                "准确率下降幅度 "+one1.getAccuracyDrop()+"\n"+
+                "攻击成功率 "+one1.getAttackSuccessRate(),normalFont);
+        content11.setSpacingBefore(smallGap);
+        content11.setSpacingAfter(smallGap);
+        doc.add(content11);
+
+        Paragraph content12=new Paragraph(two1.getAttack()+"\n"
+                +"对抗样本准确率 "+two1.getAdvAccuracy()+"\n"+
+                "准确率下降幅度 "+two1.getAccuracyDrop()+"\n"+
+                "攻击成功率 "+two1.getAttackSuccessRate(),normalFont);
+        content12.setSpacingBefore(smallGap);
+        content12.setSpacingAfter(smallGap);
+        doc.add(content12);
+
+        Paragraph content13=new Paragraph(three1.getAttack()+"\n"
+                +"对抗样本准确率 "+three1.getAdvAccuracy()+"\n"+
+                "准确率下降幅度 "+three1.getAccuracyDrop()+"\n"+
+                "攻击成功率 "+three1.getAttackSuccessRate(),normalFont);
+        content13.setSpacingBefore(smallGap);
+        content13.setSpacingAfter(smallGap);
+        doc.add(content13);
+
         Paragraph content7=new Paragraph("2. 鲁棒性等级评定\n" +
-                "综合检测结果，模型鲁棒性等级评定为：D 级\n" +
+                "综合检测结果，模型的鲁棒性分数为："+result.getRobustScore()+"\n" +
+                "模型鲁棒性等级评定为："+result.getRobustLevel()+"\n" +
                 "该等级表明模型在面对强对抗扰动时，抗干扰能力一般，仍需通过优化数据增强、调整模型结构等方\n" +
                 "式进一步提升稳定性",normalFont);
         content7.setSpacingBefore(smallGap);
         content7.setSpacingAfter(smallGap);
         doc.add(content7);
+
 
         Paragraph section3=new Paragraph("三、可视化结果说明",headingFont);
         section3.setAlignment(5);
@@ -500,6 +535,42 @@ public class EvaluateServiceImpl {
         image3.setSpacingBefore(0);
         image3.setSpacingAfter(4);
         doc.add(image3);
+
+        Paragraph content14=new Paragraph("4.Bubble(气泡图)\n");
+        content14.setSpacingBefore(smallGap);
+        content14.setSpacingAfter(smallGap);
+        doc.add(content14);
+
+        Image image4=Image.getInstance(image_4);
+        image4.setAlignment(Image.ALIGN_CENTER);
+
+        image4.setSpacingBefore(0);
+        image4.setSpacingAfter(4);
+        doc.add(image4);
+
+        Paragraph content15=new Paragraph("攻击方式:"+one2.getAttack()+"\n"+
+        "查询时间:"+one2.getQueryTime()+"\n"+
+                "成功率:"+one2.getSuccessRate()+"\n"+
+                "eps:"+one2.getEps());
+        content15.setSpacingBefore(smallGap);
+        content15.setSpacingAfter(smallGap);
+        doc.add(content15);
+
+        Paragraph content16=new Paragraph("攻击方式:"+two2.getAttack()+"\n"+
+                "查询时间:"+two2.getQueryTime()+"\n"+
+                "成功率:"+two2.getSuccessRate()+"\n"+
+                "eps:"+two2.getEps());
+        content16.setSpacingBefore(smallGap);
+        content16.setSpacingAfter(smallGap);
+        doc.add(content16);
+
+        Paragraph content17=new Paragraph("攻击方式:"+one2.getAttack()+"\n"+
+                "查询时间:"+three2.getQueryTime()+"\n"+
+                "成功率:"+three2.getSuccessRate()+"\n"+
+                "eps:"+three2.getEps());
+        content17.setSpacingBefore(smallGap);
+        content17.setSpacingAfter(smallGap);
+        doc.add(content17);
 
         doc.close();
         String random=UUID.randomUUID().toString();
