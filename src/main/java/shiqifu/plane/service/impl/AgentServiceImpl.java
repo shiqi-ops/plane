@@ -78,7 +78,7 @@ public class AgentServiceImpl {
                 Font normalFont = new Font(bf, 11, Font.NORMAL);
                 int smallGap = 2;
 
-                Paragraph title=new Paragraph("AI 安全检测报告");
+                Paragraph title=new Paragraph("AI 安全检测报告",titleFont);
                 title.setAlignment(Paragraph.ALIGN_CENTER);
                 title.setSpacingAfter(10);
                 doc.add(title);
@@ -102,10 +102,52 @@ public class AgentServiceImpl {
                 doc.add(image);
 
                 Paragraph p3=new Paragraph("检测方法：Feature Squeezing 多尺度一致性检测\n" +
-                        "风险等级：高（High）",normalFont);
+                        "风险等级："+result.getRisk_level(),normalFont);
                 p3.setSpacingBefore(smallGap);
                 p3.setSpacingAfter(smallGap);
                 doc.add(p3);
+
+                Paragraph section=new Paragraph("1. 检测结果摘要",headingFont);
+                section.setSpacingBefore(smallGap);
+                section.setSpacingAfter(smallGap);
+                doc.add(section);
+
+                Paragraph p4=new Paragraph("风险评分: "+result.getRisk_score()+" \n" +
+                        "风险等级: "+result.getRisk_level()+" \n",normalFont);
+                p4.setSpacingBefore(smallGap);
+                p4.setSpacingAfter(smallGap);
+                doc.add(p4);
+
+                Paragraph section2=new Paragraph("2. 多维度检测分析",headingFont);
+                section2.setSpacingBefore(smallGap);
+                section2.setSpacingAfter(smallGap);
+                doc.add(section2);
+
+                Paragraph p5=new Paragraph("检测方法：Feature Squeezing 多尺度压缩一致性检测\n" +
+                        "检测原理：通过多尺度图像压缩（如降低色彩深度、平滑滤波），对比原始图像与压缩图像\n" +
+                        "检查总结："+result.getAgent1_analysis(),normalFont);
+                p5.setSpacingBefore(smallGap);
+                p5.setSpacingAfter(smallGap);
+                doc.add(p5);
+
+                Paragraph p6=new Paragraph("2.2 场景风险分析\n" +
+                        "攻击来源总结推断:\n"+result.getAgent2_analysis(),normalFont);
+                p6.setSpacingBefore(smallGap);
+                p6.setSpacingAfter(smallGap);
+                doc.add(p6);
+
+                Paragraph section3=new Paragraph("3. 最终风险报告",headingFont);
+                section3.setSpacingBefore(smallGap);
+                section3.setSpacingAfter(smallGap);
+                doc.add(section3);
+
+                Paragraph p7=new Paragraph(result.getFinal_report()+"\n" +
+                        "此类攻击在无人机应用场景中，常见形式为恶意贴纸攻击或红外干扰，会直接导致模型\n" +
+                        "决策不可信。为保障飞行安全，需立即触发人工接管，并对飞行环境进行复核，排除物理干\n" +
+                        "扰源",normalFont);
+                p7.setSpacingBefore(smallGap);
+                p7.setSpacingAfter(smallGap);
+                doc.add(p7);
 
                 doc.close();
 

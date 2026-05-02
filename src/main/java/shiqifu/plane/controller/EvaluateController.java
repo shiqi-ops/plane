@@ -10,6 +10,7 @@ import shiqifu.plane.entity.dto.EvaluateMoreDTO;
 import shiqifu.plane.entity.dto.EvaluateOwnDTO;
 import shiqifu.plane.entity.entity.Result;
 import shiqifu.plane.entity.entity.ResultMore;
+import shiqifu.plane.entity.entity.ResultOwn;
 import shiqifu.plane.service.impl.EvaluateServiceImpl;
 import shiqifu.plane.service.impl.MinioServiceImpl;
 
@@ -56,14 +57,14 @@ public class EvaluateController {
     }
     @NeedDownloadModel
     @PostMapping("/own")
-    public Result own(EvaluateOwnDTO evaluateOwnDTO){
+    public ResultOwn own(EvaluateOwnDTO evaluateOwnDTO){
         try {
             log.info("开始测试");
             String model_pth = evaluateOwnDTO.getModel_pth();
             String attack=evaluateOwnDTO.getAttack();
             String dataset = evaluateOwnDTO.getDataset();
             String eps = evaluateOwnDTO.getEps();
-            Result result=evaluateService.own(model_pth,attack,dataset,eps);
+            ResultOwn result=evaluateService.own(model_pth,attack,dataset,eps);
             System.out.println("结果"+result.toString());
             return result;
         }

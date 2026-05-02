@@ -539,6 +539,7 @@ public class EvaluateServiceImpl {
         doc.add(content14);
 
         Image image4=Image.getInstance(root+image_4);
+        image4.scaleToFit(340, 240);
         image4.setAlignment(Image.ALIGN_CENTER);
 
         image4.setSpacingBefore(0);
@@ -571,7 +572,7 @@ public class EvaluateServiceImpl {
 
         doc.close();
         String random=UUID.randomUUID().toString();
-        String fileName = random + ".pdf";
+        String fileName = "path/"+random + ".pdf";
         byte[]bytes=bos.toByteArray();
         minioClient.putObject(
           PutObjectArgs.builder()
@@ -581,6 +582,7 @@ public class EvaluateServiceImpl {
                   .contentType("application/pdf")
                   .build()
         );
+        result.setDownloadUrl(fileName);
         return result;
     }
     public ResultOwn own(String model_path, String attack, String dataset, String eps) throws Exception{
@@ -603,58 +605,18 @@ public class EvaluateServiceImpl {
         Process p=pb.start();
         ResultOwn result=null;
         boolean jsonFind=false;
-        boolean jsonIn=false;
         StringBuilder jsonBuffer = new StringBuilder();
-        Integer count=0;
         try (BufferedReader br=new BufferedReader(new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
             while ((line=br.readLine())!=null) {
                 System.out.println(line);
                 String trimLine=line.trim();
-                if (trimLine.startsWith("model_path")) {
-                    result.setModelPath(trimLine.substring(trimLine.indexOf(" ") + 1));
-                }
-                else if (trimLine.startsWith("dataset")) {
-                    result.setDataset(trimLine.substring(trimLine.indexOf(" ") + 1));
-                }
-                else if (trimLine.startsWith("dataset_size")) {
-                    result.setAttack(trimLine.substring(trimLine.indexOf(" ") + 1));
-                }
-                else if(trimLine.startsWith("attack")) {
-                    result.setAttack(trimLine.substring(trimLine.indexOf(" ") + 1));
-                }
-                else if (trimLine.startsWith("eps")) {
-                    String val = trimLine.substring(trimLine.indexOf(" ") + 1).trim();
-                    result.setEps(Double.parseDouble(val));
-                }
-                else if (trimLine.startsWith("clean_accuracy")) {
-                    String val = trimLine.substring(trimLine.indexOf(" ") + 1).trim();
-                    result.setCleanAccuracy(Double.parseDouble(val));
-                }
-                else if (trimLine.startsWith("adv_accuracy")) {
-                    String val = trimLine.substring(trimLine.indexOf(" ") + 1).trim();
-                    result.setAdvAccuracy(Double.parseDouble(val));
-                }
-                else if (trimLine.startsWith("accuracy_drop")) {
-                    String val = trimLine.substring(trimLine.indexOf(" ") + 1).trim();
-                    result.setAccuracyDrop(Double.parseDouble(val));
-                }else if(trimLine.startsWith("attack_success_rate")) {
-                    String val = trimLine.substring(trimLine.indexOf(" ") + 1).trim();
-                    result.setAttackSuccessRate(Double.parseDouble(val));
-                }
-                else if(trimLine.startsWith("attack_time")){
-                    String val = trimLine.substring(trimLine.indexOf(" ") + 1).trim();
-                    result.setAttackTime(Double.parseDouble(val));
-                }
-                else if (trimLine.startsWith("robustness_level")) {
-                    result.setRobustLevel(trimLine.substring(trimLine.indexOf(" ") + 1));
-                }
-                else if (trimLine.startsWith("robust_score")) {
-                    String val = trimLine.substring(trimLine.indexOf(" ") + 1).trim();
-                    result.setRobustScore(Double.parseDouble(val));
-                }
+                jsonBuffer.append(trimLine);
                 jsonFind=true;
             }
+        }
+        if(jsonFind){
+            result=gson.fromJson(jsonBuffer.toString(),ResultOwn.class);
         }
         int exitCode=p.waitFor();
         if(exitCode!=0){
@@ -750,7 +712,7 @@ public class EvaluateServiceImpl {
         content8.setSpacingAfter(6);
         doc.add(content8);
 
-        Paragraph content15=new Paragraph("攻击成功准确率: "+result.getRobustLevel(), normalFont);
+        Paragraph content15=new Paragraph("攻击成功准确率: "+result.getAttackSuccessRate(), normalFont);
         content15.setSpacingBefore(smallGap);
         content15.setSpacingAfter(6);
         doc.add(content15);

@@ -1,14 +1,86 @@
 {
-    "model_path": "C:\\Users\\31818\\AppData\\Local\\Temp\\upload_531327590101991108548ced833-e66a-4c5d-b538-fbe89cfb8931.pth",
+    "model": "resnet18",
     "dataset": "drone_dataset",
     "dataset_size": 1044,
-    "attack": "FGSM",
-    "eps": 0.03,
     "clean_accuracy": 0.7068965517241379,
-    "adv_accuracy": 0.23084291187739464,
-    "accuracy_drop": 0.47605363984674326,
-    "attack_success_rate": 0.7691570881226053,
-    "attack_time": 56.87818717956543,
-    "robust_score": 32.65582655826559,
-    "robust_level": "Poor"
+    "attack_results": [
+        {
+            "attack": "FGSM",
+            "clean_accuracy": 0.7068965517241379,
+            "adv_accuracy": 0.23084291187739464,
+            "accuracy_drop": 0.47605363984674326,
+            "attack_success_rate": 0.7691570881226053,
+            "query_time": 43.99437117576599,
+            "eps": 0.03
+        },
+        {
+            "attack": "RFGSM",
+            "clean_accuracy": 0.7068965517241379,
+            "adv_accuracy": 0.0,
+            "accuracy_drop": 0.7068965517241379,
+            "attack_success_rate": 1.0,
+            "query_time": 287.10563611984253,
+            "eps": 0.03
+        },
+        {
+            "attack": "FFGSM",
+            "clean_accuracy": 0.7068965517241379,
+            "adv_accuracy": 0.20019157088122605,
+            "accuracy_drop": 0.5067049808429118,
+            "attack_success_rate": 0.7998084291187739,
+            "query_time": 45.80341196060181,
+            "eps": 0.03
+        }
+    ],
+    "ranking": [
+        {
+            "attack": "RFGSM",
+            "clean_accuracy": 0.7068965517241379,
+            "adv_accuracy": 0.0,
+            "accuracy_drop": 0.7068965517241379,
+            "attack_success_rate": 1.0,
+            "query_time": 287.10563611984253,
+            "eps": 0.03
+        },
+        {
+            "attack": "FFGSM",
+            "clean_accuracy": 0.7068965517241379,
+            "adv_accuracy": 0.20019157088122605,
+            "accuracy_drop": 0.5067049808429118,
+            "attack_success_rate": 0.7998084291187739,
+            "query_time": 45.80341196060181,
+            "eps": 0.03
+        },
+        {
+            "attack": "FGSM",
+            "clean_accuracy": 0.7068965517241379,
+            "adv_accuracy": 0.23084291187739464,
+            "accuracy_drop": 0.47605363984674326,
+            "attack_success_rate": 0.7691570881226053,
+            "query_time": 43.99437117576599,
+            "eps": 0.03
+        }
+    ],
+    "robust_score": 20.32520325203252,
+    "robust_level": "Poor",
+    "bubble_data": [
+        {
+            "attack": "FGSM",
+            "query_time": 43.99437117576599,
+            "success_rate": 0.7691570881226053,
+            "eps": 0.03
+        },
+        {
+            "attack": "RFGSM",
+            "query_time": 287.10563611984253,
+            "success_rate": 1.0,
+            "eps": 0.03
+        },
+        {
+            "attack": "FFGSM",
+            "query_time": 45.80341196060181,
+            "success_rate": 0.7998084291187739,
+            "eps": 0.03
+        }
+    ]
 }

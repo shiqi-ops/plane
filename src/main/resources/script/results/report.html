@@ -1,26 +1,33 @@
 
     <html>
-    <head>
-        <meta charset="utf-8">
-        <title>模型鲁棒性评估报告</title>
-    </head>
     <body>
-        <h1>模型鲁棒性评估报告</h1>
-        <h3>模型路径：C:\Users\31818\AppData\Local\Temp\upload_531327590101991108548ced833-e66a-4c5d-b538-fbe89cfb8931.pth</h3>
-        <h3>数据集：drone_dataset（共 1044 张）</h3>
-        <h3>攻击方法：FGSM | eps=0.03</h3>
-        <hr>
-        <p><b>原始准确率：</b>0.7069</p>
-        <p><b>攻击后准确率：</b>0.2308</p>
-        <p><b>准确率下降：</b>0.4761</p>
-        <p><b>攻击成功率：</b>0.7692</p>
-        <p><b>鲁棒得分：</b>32.66</p>
-        <p><b>鲁棒等级：</b>Poor</p>
-        <hr>
-        <h3>样本对比</h3>
-        <img src="compare.png" width="700">
-        <h3>鲁棒性曲线</h3>
-        <img src="robustness_curve.png" width="700">
+
+    <h1>Drone Robustness Report</h1>
+
+    <h2>Model</h2>
+    <p>resnet18</p>
+
+    <h2>Dataset</h2>
+    <p>drone_dataset</p>
+
+    <h2>Clean Accuracy</h2>
+    <p>0.7069</p>
+
+    <h2>Robust Score</h2>
+    <p>20.33</p>
+
+    <h2>Robust Level</h2>
+    <p>Poor</p>
+
+    <h2>Bar</h2>
+    <img src="attack_bar.png" width="600">
+
+    <h2>Curve</h2>
+    <img src="robustness_curve.png" width="600">
+
+    <h2>Heatmap</h2>
+    <img src="attack_heatmap.png" width="600">
+
     </body>
     </html>
     
