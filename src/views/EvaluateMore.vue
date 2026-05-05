@@ -76,23 +76,23 @@
           </div>
           <div class="ib-item">
             <span class="ib-label">数据规模</span>
-            <span class="ib-val">{{ result.dataset_size }} 样本</span>
+            <span class="ib-val">{{ result.datasetSize }} 样本</span>
           </div>
           <div class="ib-item">
             <span class="ib-label">清洁准确率</span>
-            <span class="ib-val">{{ (result.clean_accuracy * 100).toFixed(2) }}%</span>
+            <span class="ib-val">{{ (result.cleanAccuracy * 100).toFixed(2) }}%</span>
           </div>
         </div>
 
         <!-- 核心评分区 -->
         <!-- <div class="score-section">
           <div class="score-circle">
-            <div class="score-num">{{ result.robust_score?.toFixed(1) }}</div>
+            <div class="score-num">{{ result.robustScore?.toFixed(1) }}</div>
             <div class="score-label">ROBUST SCORE</div>
           </div>
           <div class="grade-box">
             <div class="grade-label">综合鲁棒等级评定</div>
-            <div class="grade-val" :class="'level-' + result.robust_level">{{ result.robust_level }}</div>
+            <div class="grade-val" :class="'level-' + result.robustLevel">{{ result.robustLevel }}</div>
             <div class="grade-desc">根据多个攻击算法下的性能表现加权计算得出</div>
           </div>
         </div> -->
@@ -111,12 +111,12 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="atk in result.attack_results" :key="atk.attack">
+              <tr v-for="atk in result.attackResults" :key="atk.attack">
                 <td class="td-name">{{ atk.attack }}</td>
-                <td>{{ (atk.clean_accuracy * 100).toFixed(2) }}%</td>
-                <td class="td-adv">{{ (atk.adv_accuracy * 100).toFixed(2) }}%</td>
-                <td class="td-drop">{{ (atk.accuracy_drop * 100).toFixed(2) }}%</td>
-                <td class="td-rate">{{ (atk.attack_success_rate * 100).toFixed(2) }}%</td>
+                <td>{{ (atk.cleanAccuracy * 100).toFixed(2) }}%</td>
+                <td class="td-adv">{{ (atk.advAccuracy * 100).toFixed(2) }}%</td>
+                <td class="td-drop">{{ (atk.accuracyDrop * 100).toFixed(2) }}%</td>
+                <td class="td-rate">{{ (atk.attackSuccessRate * 100).toFixed(2) }}%</td>
               </tr>
             </tbody>
           </table>
@@ -129,9 +129,9 @@
             <span class="rank-num">{{ i + 1 }}</span>
             <span class="rank-name">{{ atk.attack }}</span>
             <div class="rank-bar-bg">
-              <div class="rank-bar-fill" :style="{ width: (atk.attack_success_rate * 100) + '%' }"></div>
+              <div class="rank-bar-fill" :style="{ width: (atk.attackSuccessRate * 100) + '%' }"></div>
             </div>
-            <span class="rank-val">{{ (atk.attack_success_rate * 100).toFixed(1) }}%</span>
+            <span class="rank-val">{{ (atk.attackSuccessRate * 100).toFixed(1) }}%</span>
           </div>
         </div>
 
@@ -139,10 +139,10 @@
         <div class="report-section-title"><span>▌</span> 可视化图表分析 (Visual Analysis)</div>
         <div class="report-visuals">
           <!-- Attack Bar -->
-          <div class="visual-block" v-if="result.attack_bar">
+          <div class="visual-block" v-if="result.attackBar">
             <div class="visual-label">1. 攻击鲁棒性对比柱状图 (Attack Bar)</div>
             <div class="visual-img-wrap">
-              <img :src="result.attack_bar" alt="Attack Bar" />
+              <img :src="result.attackBar" alt="Attack Bar" />
             </div>
             <p class="visual-desc">
               本图以柱状图形式直观展示了三种攻击方法下模型的对抗样本准确率，可清晰对比不同攻击对模型性能的影响程度。
@@ -150,7 +150,7 @@
           </div>
 
           <!-- Bubble Chart -->
-          <div class="visual-block" v-show="result && result.attack_results">
+          <div class="visual-block" v-show="result && result.attackResults">
             <div class="visual-label">2. 攻击效能气泡图 (Attack Efficiency Bubble Chart)</div>
             <div class="visual-img-wrap">
               <div ref="bubbleRef" style="width: 100%; height: 400px;"></div>
@@ -161,10 +161,10 @@
           </div>
 
           <!-- Robustness Curve -->
-          <div class="visual-block" v-if="result.attack_heatmap">
+          <div class="visual-block" v-if="result.attackHeatmap">
             <div class="visual-label">3. 鲁棒性曲线 (Robustness Curve)</div>
             <div class="visual-img-wrap">
-              <img :src="result.robustness_curve" alt="Robustness Curve" />
+              <img :src="result.robustnessCurve" alt="Robustness Curve" />
             </div>
             <p class="visual-desc">
               本图以折线图形式呈现了模型在不同扰动强度（Eps）下的准确率变化趋势，反映了模型随扰动增强时的鲁棒性衰减规律。
@@ -172,10 +172,10 @@
           </div>
 
           <!-- Heatmap -->
-          <div class="visual-block" v-if="result.attack_heatmap">
+          <div class="visual-block" v-if="result.attackHeatmap">
             <div class="visual-label">4. 攻击热力图 (Heatmap)</div>
             <div class="visual-img-wrap">
-              <img :src="result.attack_heatmap" alt="Heatmap" />
+              <img :src="result.attackHeatmap" alt="Heatmap" />
             </div>
             <p class="visual-desc">
               本图以热力图形式展示了不同扰动强度与攻击方法组合下的模型准确率分布，通过颜色深浅直观体现准确率差异，便于快速定位高风险扰动-攻击组合。
@@ -188,12 +188,12 @@
           <div class="conclusion-content">
             <div class="conclusion-label">综合评测结论:</div>
             <div class="conclusion-text">
-              经过对所选攻击组合的批量压力测试，该模型表现出<strong>{{ result.robust_level === 'A' || result.robust_level === 'B' ? '良好' : '较弱' }}</strong>的防御能力。
+              经过对所选攻击组合的批量压力测试，该模型表现出<strong>{{ result.robustLevel === 'A' || result.robustLevel === 'B' ? '良好' : '较弱' }}</strong>的防御能力。
               在 {{ result.ranking[0]?.attack }} 攻击下性能下降最为显著，建议针对该类攻击进行针对性对抗训练加固。
             </div>
           </div>
           <!-- 导出按钮 -->
-          <div v-if="result.download_url" class="export-wrap">
+          <div v-if="result.downloadUrl" class="export-wrap">
             <button class="export-btn" @click="handleDownload">
               <span class="export-icon">⤓</span> 导出详细评测报告
             </button>
@@ -242,27 +242,42 @@ let t = 0
 let timer = null
 let baseData = []
 
+let retryCount = 0
+const MAX_RETRY = 10
+
 function renderBubbleChart() {
-  console.log('[BubbleChart] 被调用')
-  console.log('[BubbleChart] bubbleRef.value:', bubbleRef.value)
-  console.log('[BubbleChart] result.value:', result.value)
+  console.log('[BubbleChart] 被调用，重试次数:', retryCount)
   
   if (!bubbleRef.value) {
     console.error("[BubbleChart] 气泡图容器未找到");
     return;
   }
-  console.log('[BubbleChart] 容器尺寸:', bubbleRef.value.clientWidth, bubbleRef.value.clientHeight)
-  if (!bubbleRef.value.clientWidth || !bubbleRef.value.clientHeight) {
-    console.warn("[BubbleChart] 容器尺寸为0，等待DOM渲染完成");
-    setTimeout(renderBubbleChart, 100);
-    return;
+  
+  const width = bubbleRef.value.clientWidth
+  const height = bubbleRef.value.clientHeight
+  console.log('[BubbleChart] 容器尺寸:', width, height)
+  
+  if (!width || !height) {
+    if (retryCount < MAX_RETRY) {
+      retryCount++
+      console.warn(`[BubbleChart] 容器尺寸为0，第${retryCount}次重试...`)
+      setTimeout(renderBubbleChart, 200)
+      return
+    } else {
+      console.error("[BubbleChart] 重试次数用完，容器尺寸仍为0");
+      retryCount = 0
+      return
+    }
   }
-  if (!result.value || !result.value.attack_results || !result.value.attack_results.length) {
-    console.error("[BubbleChart] 缺少 attack_results 数据:", result.value);
+  
+  retryCount = 0
+  
+  if (!result.value || !result.value.attackResults || !result.value.attackResults.length) {
+    console.error("[BubbleChart] 缺少 attackResults 数据:", result.value);
     return;
   }
 
-  // 如果已经有实例，先销毁或直接 setOption
+  // 如果已经有实例，先销毁
   if (bubbleChart) {
     bubbleChart.dispose(); 
   }
@@ -270,16 +285,16 @@ function renderBubbleChart() {
   bubbleChart = echarts.init(bubbleRef.value);
   console.log('[BubbleChart] ECharts 初始化完成')
 
-  // ⭐ 动态生成横轴映射，防止硬编码报错
-  const categories = result.value.attack_results.map(item => item.attack);
+  // 动态生成横轴映射
+  const categories = result.value.attackResults.map(item => item.attack);
   console.log('[BubbleChart] categories:', categories)
   const xIndexMap = {};
   categories.forEach((name, idx) => { xIndexMap[name] = idx; });
 
-  baseData = result.value.attack_results.map((item, index) => ({
+  baseData = result.value.attackResults.map((item, index) => ({
     x: item.attack,
-    y: item.attack_success_rate,
-    size: item.attack_success_rate * 55, 
+    y: item.attackSuccessRate,
+    size: item.attackSuccessRate * 55, 
     phase: index * Math.PI / 1.5
   }))
 
@@ -397,7 +412,7 @@ function renderBubbleChart() {
 // 2. 改进 Watch 逻辑
 watch(() => result.value, async (newVal) => {
   console.log('[Watch] result.value 变化:', newVal)
-  if (newVal && newVal.attack_results) {
+  if (newVal && newVal.attackResults) {
     console.log('[Watch] 开始等待 nextTick')
     // 核心：必须等待 Vue 渲染完 v-if 里的内容
     await nextTick(); 
@@ -432,24 +447,24 @@ const getMockData = () => {
   return {
     model: 'ResNet18',
     dataset: 'drone_dataset',
-    dataset_size: 1000,
-    clean_accuracy: 0.92,
-    robust_score: 78.5,
-    robust_level: 'B',
-    attack_results: [
-      { attack: 'FGSM', clean_accuracy: 0.92, adv_accuracy: 0.72, accuracy_drop: 0.20, attack_success_rate: 0.28 },
-      { attack: 'FFGSM', clean_accuracy: 0.92, adv_accuracy: 0.65, accuracy_drop: 0.27, attack_success_rate: 0.45 },
-      { attack: 'RFGSM', clean_accuracy: 0.92, adv_accuracy: 0.45, accuracy_drop: 0.47, attack_success_rate: 0.82 },
+    datasetSize: 1000,
+    cleanAccuracy: 0.92,
+    robustScore: 78.5,
+    robustLevel: 'B',
+    attackResults: [
+      { attack: 'FGSM', cleanAccuracy: 0.92, advAccuracy: 0.72, accuracyDrop: 0.20, attackSuccessRate: 0.28 },
+      { attack: 'FFGSM', cleanAccuracy: 0.92, advAccuracy: 0.65, accuracyDrop: 0.27, attackSuccessRate: 0.45 },
+      { attack: 'RFGSM', cleanAccuracy: 0.92, advAccuracy: 0.45, accuracyDrop: 0.47, attackSuccessRate: 0.82 },
     ],
     ranking: [
-      { attack: 'RFGSM', attack_success_rate: 0.82 },
-      { attack: 'FFGSM', attack_success_rate: 0.45 },
-      { attack: 'FGSM', attack_success_rate: 0.28 },
+      { attack: 'RFGSM', attackSuccessRate: 0.82 },
+      { attack: 'FFGSM', attackSuccessRate: 0.45 },
+      { attack: 'FGSM', attackSuccessRate: 0.28 },
     ],
-    attack_bar: '../../public/009.png',
-    attack_heatmap: '../../public/011.png',
-    robustness_curve: '../../public/010.png',
-    download_url: '../../public/012.pdf'
+    attackBar: '../../public/009.png',
+    attackHeatmap: '../../public/011.png',
+    robustnessCurve: '../../public/010.png',
+    downloadUrl: '../../public/012.pdf'
   }
 }
 
@@ -493,8 +508,8 @@ async function handleSubmit() {
 
 
 async function handleDownload() {
-  const fileName = result.value?.download_url
-  console.log('download_url:', fileName)
+  const fileName = result.value?.downloadUrl
+  console.log('downloadUrl:', fileName)
 
   try {
     const response = await fetch(`/minio/download`, {

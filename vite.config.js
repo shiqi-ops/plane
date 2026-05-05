@@ -18,16 +18,16 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://2503fc91.r39.cpolar.top',
+        target: 'http://7e0ea1ce.r6.cpolar.cn',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
       '/minio': {
-        target: 'http://2503fc91.r39.cpolar.top',
+        target: 'http://7e0ea1ce.r6.cpolar.cn',
         changeOrigin: true,
       },
       '/ai': {
-        target: 'http://2503fc91.r39.cpolar.top',
+        target: 'http://7e0ea1ce.r6.cpolar.cn',
         changeOrigin: true,
       },
     },

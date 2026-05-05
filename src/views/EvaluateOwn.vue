@@ -196,7 +196,7 @@
           <div class="visual-block" v-if="result.comparePath">
             <div class="visual-label">1. 原始图像 (Original) vs 对抗样本 (Adversarial)</div>
             <div class="visual-img-wrap">
-              <img :src="imgUrl(result.comparePath)" alt="对比图" />
+              <img :src="result.comparePath" alt="对比图" />
             </div>
             <p class="visual-desc">
               对比分析：左侧为原始输入图像，右侧为添加扰动后的对抗样本。虽然视觉差异极小，但已成功诱导模型产生错误判断。
@@ -224,7 +224,7 @@
             </div>
           </div>
           <!-- 导出按钮 -->
-          <div v-if="result.downloadUrl" class="export-wrap">
+          <div v-if="result.download_url" class="export-wrap">
             <button class="export-btn" @click="handleDownload">
               <span class="export-icon">⤓</span> 导出详细评测报告
             </button>
@@ -378,7 +378,7 @@ async function handleSubmit() {
 
 // ── 下载报告 ──────────────────────────────────
 async function handleDownload() {
-  const fileName = result.value?.downloadUrl
+  const fileName = result.value?.download_url
   console.log('download_url:', fileName)
 
   try {
