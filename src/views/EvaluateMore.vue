@@ -85,7 +85,7 @@
         </div>
 
         <!-- 核心评分区 -->
-        <div class="score-section">
+        <!-- <div class="score-section">
           <div class="score-circle">
             <div class="score-num">{{ result.robust_score?.toFixed(1) }}</div>
             <div class="score-label">ROBUST SCORE</div>
@@ -95,7 +95,7 @@
             <div class="grade-val" :class="'level-' + result.robust_level">{{ result.robust_level }}</div>
             <div class="grade-desc">根据多个攻击算法下的性能表现加权计算得出</div>
           </div>
-        </div>
+        </div> -->
 
         <!-- 详细数据表 -->
         <div class="report-section-title"><span>▌</span> 攻击组合评测明细 (Attack Details)</div>
@@ -243,8 +243,22 @@ let timer = null
 let baseData = []
 
 function renderBubbleChart() {
+  console.log('[BubbleChart] 被调用')
+  console.log('[BubbleChart] bubbleRef.value:', bubbleRef.value)
+  console.log('[BubbleChart] result.value:', result.value)
+  
   if (!bubbleRef.value) {
-    console.error("气泡图容器未找到");
+    console.error("[BubbleChart] 气泡图容器未找到");
+    return;
+  }
+  console.log('[BubbleChart] 容器尺寸:', bubbleRef.value.clientWidth, bubbleRef.value.clientHeight)
+  if (!bubbleRef.value.clientWidth || !bubbleRef.value.clientHeight) {
+    console.warn("[BubbleChart] 容器尺寸为0，等待DOM渲染完成");
+    setTimeout(renderBubbleChart, 100);
+    return;
+  }
+  if (!result.value || !result.value.attack_results || !result.value.attack_results.length) {
+    console.error("[BubbleChart] 缺少 attack_results 数据:", result.value);
     return;
   }
 
@@ -254,9 +268,11 @@ function renderBubbleChart() {
   }
   
   bubbleChart = echarts.init(bubbleRef.value);
+  console.log('[BubbleChart] ECharts 初始化完成')
 
   // ⭐ 动态生成横轴映射，防止硬编码报错
   const categories = result.value.attack_results.map(item => item.attack);
+  console.log('[BubbleChart] categories:', categories)
   const xIndexMap = {};
   categories.forEach((name, idx) => { xIndexMap[name] = idx; });
 
@@ -380,10 +396,15 @@ function renderBubbleChart() {
 }
 // 2. 改进 Watch 逻辑
 watch(() => result.value, async (newVal) => {
+  console.log('[Watch] result.value 变化:', newVal)
   if (newVal && newVal.attack_results) {
+    console.log('[Watch] 开始等待 nextTick')
     // 核心：必须等待 Vue 渲染完 v-if 里的内容
     await nextTick(); 
+    console.log('[Watch] nextTick 完成，调用 renderBubbleChart')
     renderBubbleChart();
+  } else {
+    console.log('[Watch] 数据不完整，跳过')
   }
 }, { deep: true });
 
@@ -406,17 +427,15 @@ function saveHistory(entry) {
   localStorage.setItem('evalHistory', JSON.stringify(list))
 }
 
-// 模拟后端返回的数据结构
-// 在 script setup 里的 handleSubmit 函数上方添加
+// 模拟后端返回的数据结构（供测试用）
 const getMockData = () => {
   return {
-    model: 'ResNet18 (Mock)',
-    dataset: 'CIFAR-10',
-    dataset_size: 10000,
+    model: 'ResNet18',
+    dataset: 'drone_dataset',
+    dataset_size: 1000,
     clean_accuracy: 0.92,
-    robust_score: 85.5,
-    robust_level: 'A',
-    // 关键：气泡图渲染依赖这个数组
+    robust_score: 78.5,
+    robust_level: 'B',
     attack_results: [
       { attack: 'FGSM', clean_accuracy: 0.92, adv_accuracy: 0.72, accuracy_drop: 0.20, attack_success_rate: 0.28 },
       { attack: 'FFGSM', clean_accuracy: 0.92, adv_accuracy: 0.65, accuracy_drop: 0.27, attack_success_rate: 0.45 },
@@ -427,7 +446,6 @@ const getMockData = () => {
       { attack: 'FFGSM', attack_success_rate: 0.45 },
       { attack: 'FGSM', attack_success_rate: 0.28 },
     ],
-    // 随便放个占位图，防止报错
     attack_bar: '../../public/009.png',
     attack_heatmap: '../../public/011.png',
     robustness_curve: '../../public/010.png',
@@ -440,79 +458,77 @@ async function handleSubmit() {
   loading.value = true
   result.value = null
 
-// --- 暂时切换到 Mock 模式 ---
-  setTimeout(async () => {
-
-    const mockData = getMockData()
-    
-    // 2. 赋值给响应式变量渲染 UI
-    result.value = mockData
-    loading.value = false
-    
-    // 3. --- 关键：保存到本地历史记录 ---
-    saveHistory({
-      type: 'more',                      // 标识这是多攻击评测
-      model: form.value.model,           // 用户选的模型
-      attack_group: form.value.attack_group, // 用户选的攻击组
-      result: mockData                   // 存入完整的 Mock 结果对象
+  try {
+    const payload = {
+      model: form.value.model,
+      attack_group: form.value.attack_group,
+      dataset: 'drone_dataset',
+      eps: '0.03',
+    }
+    console.log('[Submit] 发送请求:', payload)
+    console.log('[Submit] API baseURL:', api.defaults.baseURL)
+    const res = await api.post('/evaluate/more', payload)
+    console.log('[Submit] 收到响应:', res)
+    console.log('[Submit] 响应数据:', res.data)
+    result.value = res.data
+    console.log('[Submit] result.value 设置完成:', result.value)
+    saveHistory({ 
+      type: 'more',
+      model: form.value.model, 
+      attack_group: form.value.attack_group, 
+      result: res.data 
     })
-    // 确保 DOM 更新后执行图表渲染
     await nextTick()
     renderBubbleChart()
-  }, 1000)
-
-  // try {
-  //   const payload = {
-  //     model: form.value.model,
-  //     attack_group: form.value.attack_group,
-  //     dataset: 'drone_dataset',
-  //     eps: '0.03',
-  //   }
-  //   // 确保你的 api.defaults.baseURL 已经设置了正确的后端地址
-  //   const res = await api.post('/evaluate/more', payload)
-  //   result.value = res.data
-  //   saveHistory({ 
-  //     type: 'more',
-  //     model: form.value.model, 
-  //     attack_group: form.value.attack_group, 
-  //     result: res.data 
-  //   })
-  //   await nextTick()
-  //   renderBubbleChart()
-  // } catch (e) {
-  //   console.error(e)
-  //   alert('评测失败，请确认后端服务已启动并允许跨域')
-  // } finally {
-  //   loading.value = false
-  // }
+  } catch (e) {
+    console.error('[Submit] API 请求失败:', e)
+    console.error('[Submit] 错误类型:', e.constructor?.name)
+    console.error('[Submit] 错误消息:', e.message)
+    console.error('[Submit] 响应对象:', e.response)
+    alert('评测失败，请确认后端服务已启动并允许跨域')
+  } finally {
+    loading.value = false
+  }
 }
 
 
-function handleDownload() {
-  if (!result.value?.download_url) {
-    alert('暂无评测报告')
-    return
-  }
+async function handleDownload() {
+  const fileName = result.value?.download_url
+  console.log('download_url:', fileName)
 
-  // 获取文件路径
-  const fileUrl = result.value.download_url
-  
-  // 使用 window.open 打开新窗口
-  // 浏览器会自动识别 .pdf 后缀并调用内置预览器渲染
-  window.open(fileUrl, '_blank')
+  try {
+    const response = await fetch(`/minio/download`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ fileName: fileName })
+    })
+
+    console.log('响应状态:', response.status, response.statusText)
+
+    if (!response.ok) {
+      const text = await response.text()
+      console.error('错误响应:', text)
+      throw new Error('下载失败')
+    }
+
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName.split('/').pop()
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+  } catch (e) {
+    console.error(e)
+    alert('导出失败，请重试')
+  }
 }
 
-watch(result, async (val) => {
-  if (val) {
-    await nextTick()
-    renderBubbleChart()
-  }
-})
-onMounted(() => {
-  if (result.value) {
-    renderBubbleChart()
-  }
-})
+
 </script>
 
 <style scoped>

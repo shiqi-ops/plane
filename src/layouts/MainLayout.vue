@@ -106,6 +106,8 @@ function startTyping(aiMsgId) {
 }
 
 // --- 发送消息逻辑 ---
+const fixedReply = '页面内置 样本风险评估（深度分析增强）功能，可对无人机视觉模型输入样本执行基于 Feature Squeezing 多尺度特征压缩技术的对抗风险检测，自动完成风险研判、等级判定与标准化报告生成，判断生成的对抗样本的欺骗性效果与可迁移性，为模型安全评估提供专业支撑。'
+
 async function sendMsg() {
   const content = chatInput.value.trim()
   if (!content || chatLoading.value) return 
@@ -128,50 +130,11 @@ async function sendMsg() {
   messages.value.push({ id: aiMsgId, role: 'ai', content: '' })
   chatLoading.value = true
 
-  try {
-    const response = await fetch('http://3f410949.r39.cpolar.top/ai/chat_stream', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-      },
-      body: JSON.stringify({
-        id: String(Date.now()),
-        messages: content
-      })
-    })
-
-    if (!response.ok) throw new Error('网络响应错误')
-
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-    
-    // 一旦流开始连接成功，就可以关闭 Loading 动画，让打字机接管气泡
-    chatLoading.value = false 
-
-    while (true) {
-      const { value, done } = await reader.read()
-      if (done) break
-      
-      const chunk = decoder.decode(value, { stream: true })
-      const lines = chunk.split('\n')
-      
-      for (const line of lines) {
-        // 兼容 data: 格式和纯文本格式
-        const dataStr = line.replace(/^data:\s*/, '').trim()
-        if (dataStr) {
-          bufferContent += dataStr 
-          startTyping(aiMsgId)
-        }
-      }
-    }
-    isStreamFinished = true 
-
-  } catch (error) {
-    chatLoading.value = false
-    const msg = messages.value.find(m => m.id === aiMsgId)
-    if (msg) msg.content = '回复生成失败，请检查网络或后端配置。'
-  }
+  // 使用固定回复内容
+  bufferContent = fixedReply
+  chatLoading.value = false
+  startTyping(aiMsgId)
+  isStreamFinished = true
 }
 
 function scrollBottom() {

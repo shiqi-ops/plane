@@ -226,7 +226,7 @@ onUnmounted(() => {
 
 const metrics = [
   { num: '3',   label: '可用模型' },
-  { num: '17',  label: '攻击算法' },
+  { num: '18',  label: '攻击算法' },
   { num: '4',   label: '预设套餐' },
   { num: '∞',   label: '自定义场景' },
 ]
@@ -252,10 +252,10 @@ const features = [
   {
     num: '01', icon: '◎', accent: 'amber', color: '#f59e0b',
     title: '单模型 × 单攻击',
-    desc: '自由选择三大主流模型中的任意一个，搭配 17 种攻击算法之一，快速完成单次精准评测。结果以「体检单」形式呈现，清晰标注鲁棒等级与准确率变化。',
+    desc: '自由选择三大主流模型中的任意一个，搭配 18 种攻击算法之一，快速完成单次精准评测。结果以「体检单」形式呈现，清晰标注鲁棒等级与准确率变化。',
     details: [
       { label: '可选模型', val: 'ResNet18 · MobileNetV2 · EfficientNet-b0' },
-      { label: '攻击方法', val: 'FGSM · PGD · CW · AutoAttack 等 17 种' },
+      { label: '攻击方法', val: 'FGSM · PGD · CW · AutoAttack 等 18 种' },
       { label: '输出结果', val: '鲁棒评分 + 等级 + 曲线图 + 对比图' },
     ],
     tags: ['快速评测', '单次攻击', '体检报告'],
@@ -278,7 +278,7 @@ const features = [
     details: [
       { label: '支持格式', val: 'PyTorch .pth 权重文件' },
       { label: '数据集', val: 'drone_dataset（无人机/鸟/飞机/直升机）' },
-      { label: '输出内容', val: 'JSON报告 + 柱状图 + 鲁棒曲线' },
+      { label: '输出内容', val: '鲁棒评分 + 等级 + 曲线图 + 对比图' },
     ],
     tags: ['自定义上传', '全流程自动', '可下载报告'],
   },

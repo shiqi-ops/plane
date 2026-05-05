@@ -10,9 +10,9 @@
       <div class="lab-header">
         <div class="header-main">
           <!-- <span class="lock-icon"></span> -->
-          <h1 class="lab-title">AegisDrone 隐藏 AI 安全实验室</h1>
+          <h1 class="lab-title">样本风险评估实验室</h1>
         </div>
-        <p class="lab-caption">高级 AI 安全分析系统 (Advanced AI Security Analysis System)</p>
+        <p class="lab-caption">Sample Risk Assessment Laboratory</p>
       </div>
 
       <div class="divider"></div>
@@ -22,10 +22,6 @@
         <div class="metric-card">
           <span class="m-label">系统状态</span>
           <span class="m-val online">在线 (Online)</span>
-        </div>
-        <div class="metric-card">
-          <span class="m-label">AI 智能体</span>
-          <span class="m-val">3个活跃</span>
         </div>
         <div class="metric-card">
           <span class="m-label">GPU 算力</span>
@@ -87,7 +83,7 @@
             <!-- Agent 1 -->
             <div class="agent-card" :class="{ active: overallProgress >= 10 }">
               <div class="card-hd">
-                <h3>🛡 智能体 1 - 检测原理解释</h3>
+                <h3>🛡 智能体 - 检测原理解释</h3>
                 <span v-if="overallProgress >= 100" class="status-ok">分析完成</span>
               </div>
               <p v-if="overallProgress >= 100" class="agent-desc">{{ agent1_analysis }}</p>
@@ -95,7 +91,7 @@
 
             <div class="agent-card" :class="{ active: overallProgress >= 30 }">
               <div class="card-hd">
-                <h3>🛡 智能体 2 - 安全风险分析</h3>
+                <h3>🛡 智能体 - 安全风险分析</h3>
                 <span v-if="overallProgress >= 100" class="status-warn">风险等级：{{ riskLevelCN }}</span>
               </div>
               <p v-if="overallProgress >= 100" class="agent-desc">{{ agent2_analysis }}</p>
@@ -103,8 +99,18 @@
             <!-- Agent 3 -->
             <div class="agent-card" :class="{ active: overallProgress >= 60 }">
               <div class="card-hd">
-                <h3>🛡 智能体 3 - 报告生成</h3>
+                <h3>🛡 智能体 - 报告生成</h3>
                 <span v-if="overallProgress >= 100" class="status-ok">安全加固建议与结构化报告已生成</span>
+              </div>
+              <div v-if="overallProgress >= 100" class="report-metrics">
+                <div class="metric-item">
+                  <span class="metric-label">风险评分</span>
+                  <span class="metric-value" :class="riskLevel.toLowerCase()">{{ securityScore }}</span>
+                </div>
+                <div class="metric-item">
+                  <span class="metric-label">风险等级</span>
+                  <span class="metric-value" :class="riskLevel.toLowerCase()">{{ riskLevelCN }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -114,7 +120,12 @@
 
         <!-- 最终报告 -->
         <div class="report-code">
-          <h3 class="panel-title">AI 安全报告摘要</h3>
+          <div class="report-header-row">
+            <h3 class="panel-title">AI 安全报告摘要</h3>
+            <button v-if="downloadUrl" class="download-btn" @click="downloadReport">
+              <span>⬇</span> 下载完整报告
+            </button>
+          </div>
           <pre><code>
         {{ finalReport }}
           </code></pre>
@@ -141,6 +152,7 @@ const securityScore = ref(0)
 const agent1_analysis = ref('')
 const agent2_analysis = ref('')
 const finalReport = ref('')
+const downloadUrl = ref('')
 
 // 中文映射
 const riskLevelCN = computed(() => {
@@ -206,12 +218,12 @@ async function startAnalysis() {
     await logPromise
     
     // 3. 映射后端数据
-    // 注意：请根据后端 AgentResult 类的实际字段名进行微调
     riskLevel.value = data.risk_level || data.riskLevel
     securityScore.value = data.risk_score ? parseFloat(data.risk_score).toFixed(2) : '0.00'
     agent1_analysis.value = data.agent1_analysis || ''
     agent2_analysis.value = data.agent2_analysis || ''
-    finalReport.value = data.final_report || data.finalReport
+    finalReport.value = data.final_report || data.final_report || data.finalReport
+    downloadUrl.value = data.download_url || ''
 
     overallProgress.value = 100
     activeLogs.value.push("分析完成：检测结果已汇总。")
@@ -223,6 +235,55 @@ async function startAnalysis() {
     activeLogs.value.push(`错误：${errorMsg} (状态码: ${error.response?.status || '网络错误'})`)
   } finally {
     analyzing.value = false
+  }
+}
+
+// function downloadReport() {
+//   if (!downloadUrl.value) return
+//   const link = document.createElement('a')
+//   link.href = downloadUrl.value
+//   link.download = '安全检测报告.pdf'
+//   link.click()
+// }
+
+async function downloadReport() {
+  const fileName = downloadUrl.value
+  console.log('download_url:', fileName)
+
+  if (!fileName) {
+    alert('没有可下载的报告')
+    return
+  }
+
+  try {
+    const response = await fetch(`/minio/download`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ fileName: fileName })
+    })
+
+    console.log('响应状态:', response.status, response.statusText)
+
+    if (!response.ok) {
+      const text = await response.text()
+      console.error('错误响应:', text)
+      throw new Error('下载失败')
+    }
+
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName.split('/').pop()
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+  } catch (e) {
+    console.error(e)
+    alert('导出失败，请重试')
   }
 }
 </script>
@@ -285,7 +346,11 @@ async function startAnalysis() {
 }
 
 /* Stats */
-.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.stats-row { 
+  display: grid; 
+  grid-template-columns: 
+  repeat(3, 1fr); 
+  gap: 24px; }
 .metric-card {
   background: rgba(17, 24, 39, 0.7);
   backdrop-filter: blur(10px);
@@ -391,6 +456,30 @@ async function startAnalysis() {
 .status-ok { color: #22c55e; font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; }
 .status-warn { color: #f59e0b; font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; }
 
+.report-metrics {
+  display: flex;
+  gap: 32px;
+  margin-top: 16px;
+}
+.metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.metric-label {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+.metric-value {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+.metric-value.low { color: #22c55e; }
+.metric-value.medium { color: #f59e0b; }
+.metric-value.high { color: #f43f5e; }
+
 /* Final Report */
 .final-report { margin-top: 40px; animation: slideUp 0.8s ease-out; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -399,6 +488,30 @@ async function startAnalysis() {
 .report-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 32px; }
 
 .report-code { margin-bottom: 32px; }
+.report-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.download-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 247, 255, 0.1);
+  border: 1px solid #00f7ff;
+  color: #00f7ff;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.85rem;
+  transition: all 0.3s;
+}
+.download-btn:hover {
+  background: rgba(0, 247, 255, 0.2);
+  box-shadow: 0 0 15px rgba(0, 247, 255, 0.3);
+}
 .report-code pre {
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid #1e293b;
@@ -414,7 +527,4 @@ async function startAnalysis() {
 .low { color: #22c55e !important; }
 .medium { color: #f59e0b !important; }
 .high { color: #f43f5e !important; }
-
-.fade-enter-active, .fade-leave-active { transition: opacity 0.5s; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>

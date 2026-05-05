@@ -19,7 +19,7 @@
               <div class="avatar">{{ username[0]?.toUpperCase() }}</div>
               <div class="avatar-ring"></div>
             </div>
-            <span class="lab-guide-text">双击头像进入隐藏 AI 安全实验室页面</span>
+            <span class="lab-guide-text">双击头像进入样本风险评估实验室页面</span>
           </div>
             <h2 class="user-name">{{ username }}</h2>
             <p class="user-team">团队：{{ teamName }}</p>
@@ -117,9 +117,9 @@
                     <h4 class="task-name">{{ r.model }}</h4>
                     <p class="task-sub">{{ r.attack ?? r.attack_group }}</p>
                   </div>
-                  <div class="health-score">
-                    <div class="ring-chart" :style="ringStyle(r.result.robust_score*100)">
-                      <span class="score-num">{{ (r.result.robust_score < 1 ? (r.result.robust_score * 100).toFixed(0) : (r.result.robust_score*1.0).toFixed(0)) }}</span>
+                  <div v-if="r.type !== 'more'" class="health-score">
+                    <div class="ring-chart" :style="ringStyle(r.result?.robust_score ?? r.result?.robustScore ?? 0)">
+                      <span class="score-num">{{ ((r.result?.robust_score ?? r.result?.robustScore ?? 0)).toFixed(0) }}</span>
                     </div>
                     <span class="score-label">稳定性指数</span>
                   </div>
@@ -128,11 +128,11 @@
                   <div class="footer-stats">
                     <div class="f-stat">
                       <span class="fs-label">清洁</span>
-                      <span class="fs-val">{{ ((r.result.clean_accuracy || r.result.accuracy || 0.92) * 100).toFixed(1) }}%</span>
+                      <span class="fs-val">{{ ((r.result?.clean_accuracy ?? r.result?.cleanAccuracy ?? r.result?.accuracy) || 0).toFixed(1) }}%</span>
                     </div>
                     <div class="f-stat">
                       <span class="fs-label">对抗</span>
-                      <span class="fs-val warn">{{ ((r.result.adv_accuracy || r.result.robust_accuracy || 0.72) * 100).toFixed(1) }}%</span>
+                      <span class="fs-val warn">{{ ((r.result?.adv_accuracy ?? r.result?.advAccuracy ?? r.result?.robust_accuracy) || 0).toFixed(1) }}%</span>
                     </div>
                   </div>
                   <!-- <div class="card-actions">
@@ -301,7 +301,7 @@ const history = computed(() => {
 const stats = computed(() => {
   const list = history.value
   const models = new Set(list.map(h => h.model))
-  const totalScore = list.reduce((acc, h) => acc + (h.result?.robust_score || 0), 0)
+  const totalScore = list.reduce((acc, h) => acc + (h.result?.robust_score ?? h.result?.robustScore ?? 0), 0)
   return {
     evalCount: list.length,
     modelCount: models.size,

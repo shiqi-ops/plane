@@ -153,18 +153,27 @@ async function handleInterpret() {
   interpretation.value = null
   
   try {
-    // 1. 获取 result 对象中的 download_url
-    const urlPath = selectedReport.value.result.download_url
+    // 1. 打印完整数据结构，检查字段名
+    console.log('完整报告数据:', selectedReport.value)
+    console.log('result 对象:', selectedReport.value?.result)
     
-    // 2. 按照你的要求拼接前缀
-    // 注意：在 JS 字符串中反斜杠 \ 是转义符，建议使用正斜杠 / 或者双反斜杠 \\
-    const prefix = "D:/java/xiaowebproject/mall/mall/tmp_dir"
-    const fullPath = prefix + urlPath
+    // 2. 获取路径 - 尝试多个可能的字段名
+    const urlPath = selectedReport.value.result?.downloadUrl 
+                 || selectedReport.value.result?.download_url
+                 || selectedReport.value.result?.file_path
+                 || selectedReport.value.result?.path
+    
+    if (!urlPath) {
+      throw new Error('未找到报告文件路径字段')
+    }
+    
+    // 3. 拼接完整路径
+    const fullPath = urlPath
 
-    // 3. 打印一下拼接结果，确保路径正确
+    // 4. 打印确认
     console.log('发送给后端的完整路径:', fullPath)
 
-    // 4. 发送请求
+    // 5. 发送请求
     const res = await api.post('/ai/parse', { 
       id: String(Date.now()), 
       messages: fullPath 
@@ -225,6 +234,7 @@ const suggestions = [
 let displayContent = "" // 实际显示在界面上的内容
 let bufferContent = ""  // 从后端收到的总内容缓冲区
 let typingTimer = null  // 定时器 ID
+let isStreamFinished = false // 流式传输是否完成
 
 function startTyping(aiMsgId) {
   if (typingTimer) return; // 避免重复启动
@@ -256,6 +266,11 @@ async function sendMsg(text) {
   const content = text || chatInput.value.trim()
   if (!content) return
   
+  // 重置状态
+  displayContent = ""
+  bufferContent = ""
+  isStreamFinished = false
+  
   chatInput.value = ''
   messages.value.push({ id: ++msgId, role: 'user', content })
   await nextTick(); scrollBottom()
@@ -265,11 +280,15 @@ async function sendMsg(text) {
   chatLoading.value = true
 
   try {
-    const response = await fetch('http://3f410949.r39.cpolar.top/ai/chat_stream', {
+    const url = '/ai/chat_stream'
+    console.log('请求URL:', url)
+    console.log('请求Token:', localStorage.getItem('token') ? '存在' : '不存在')
+    
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+        // 'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
       },
       body: JSON.stringify({
         id: String(Date.now()),
@@ -277,7 +296,14 @@ async function sendMsg(text) {
       })
     })
 
-    if (!response.ok) throw new Error('网络响应错误')
+    console.log('响应状态:', response.status, response.statusText)
+    console.log('响应头:', Object.fromEntries(response.headers.entries()))
+    
+    if (!response.ok) {
+      const text = await response.text()
+      console.error('错误响应内容:', text)
+      throw new Error(`网络响应错误: ${response.status} ${response.statusText}`)
+    }
 
     const reader = response.body.getReader()
     const decoder = new TextDecoder()

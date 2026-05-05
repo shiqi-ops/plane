@@ -117,19 +117,19 @@
           </div>
           <div class="ib-item">
             <span class="ib-label">样本规模</span>
-            <span class="ib-val">{{ result.dataset_size }}</span>
+            <span class="ib-val">{{ result.datasetSize }}</span>
           </div>
         </div>
 
         <!-- 核心评分区 -->
         <div class="score-section">
           <div class="score-circle">
-            <div class="score-num">{{ result.robust_score?.toFixed(1) }}</div>
+            <div class="score-num">{{ result.robustScore?.toFixed(1) }}</div>
             <div class="score-label">ROBUST SCORE</div>
           </div>
           <div class="grade-box">
             <div class="grade-label">综合鲁棒等级评定</div>
-            <div class="grade-val" :class="'level-' + result.robust_level">{{ result.robust_level }}</div>
+            <div class="grade-val" :class="'level-' + result.robustLevel">{{ result.robustLevel }}</div>
             <div class="grade-desc">根据该攻击算法下的模型表现综合评定</div>
           </div>
         </div>
@@ -149,37 +149,37 @@
             <tbody>
               <tr>
                 <td class="td-name">清洁准确率 (Clean Accuracy)</td>
-                <td>{{ (result.clean_accuracy * 100).toFixed(2) }}%</td>
+                <td>{{ (result.cleanAccuracy * 100).toFixed(2) }}%</td>
                 <td>≥ 70%</td>
                 <td>
-                  <span class="status-badge" :class="result.clean_accuracy >= 0.7 ? 'ok' : 'warn'">
-                    {{ result.clean_accuracy >= 0.7 ? '正常' : '偏低' }}
+                  <span class="status-badge" :class="result.cleanAccuracy >= 0.7 ? 'ok' : 'warn'">
+                    {{ result.cleanAccuracy >= 0.7 ? '正常' : '偏低' }}
                   </span>
                 </td>
               </tr>
               <tr>
                 <td class="td-name">对抗准确率 (Adv Accuracy)</td>
-                <td class="td-adv">{{ (result.adv_accuracy * 100).toFixed(2) }}%</td>
+                <td class="td-adv">{{ (result.advAccuracy * 100).toFixed(2) }}%</td>
                 <td>≥ 50%</td>
                 <td>
-                  <span class="status-badge" :class="result.adv_accuracy >= 0.5 ? 'ok' : 'danger'">
-                    {{ result.adv_accuracy >= 0.5 ? '正常' : '异常' }}
+                  <span class="status-badge" :class="result.advAccuracy >= 0.5 ? 'ok' : 'danger'">
+                    {{ result.advAccuracy >= 0.5 ? '正常' : '异常' }}
                   </span>
                 </td>
               </tr>
               <tr>
                 <td class="td-name">准确率下降 (Accuracy Drop)</td>
-                <td class="td-drop">{{ (result.accuracy_drop * 100).toFixed(2) }}%</td>
+                <td class="td-drop">{{ (result.accuracyDrop * 100).toFixed(2) }}%</td>
                 <td>≤ 20%</td>
                 <td>
-                  <span class="status-badge" :class="result.accuracy_drop <= 0.2 ? 'ok' : 'danger'">
-                    {{ result.accuracy_drop <= 0.2 ? '正常' : '异常' }}
+                  <span class="status-badge" :class="result.accuracyDrop <= 0.2 ? 'ok' : 'danger'">
+                    {{ result.accuracyDrop <= 0.2 ? '正常' : '异常' }}
                   </span>
                 </td>
               </tr>
               <tr>
                 <td class="td-name">攻击成功率 (Attack Success Rate)</td>
-                <td>{{ (result.attack_success_rate * 100).toFixed(2) }}%</td>
+                <td>{{ (result.attackSuccessRate * 100).toFixed(2) }}%</td>
                 <td>-</td>
                 <td>
                    <span class="status-badge info">已评估</span>
@@ -193,10 +193,10 @@
         <div class="report-section-title"><span>▌</span> 可视化图表分析 (Visual Analysis)</div>
         <div class="report-visuals">
           <!-- 原始 vs 对抗样本 -->
-          <div class="visual-block" v-if="result.compare_path">
+          <div class="visual-block" v-if="result.comparePath">
             <div class="visual-label">1. 原始图像 (Original) vs 对抗样本 (Adversarial)</div>
             <div class="visual-img-wrap">
-              <img :src="imgUrl(result.compare_path)" alt="对比图" />
+              <img :src="imgUrl(result.comparePath)" alt="对比图" />
             </div>
             <p class="visual-desc">
               对比分析：左侧为原始输入图像，右侧为添加扰动后的对抗样本。虽然视觉差异极小，但已成功诱导模型产生错误判断。
@@ -204,10 +204,10 @@
           </div>
 
           <!-- 鲁棒性性能曲线 -->
-          <div class="visual-block" v-if="result.curve_path">
+          <div class="visual-block" v-if="result.curvePath">
             <div class="visual-label">2. 鲁棒性性能曲线 (Robustness Curve)</div>
             <div class="visual-img-wrap">
-              <img :src="imgUrl(result.curve_path)" alt="鲁棒性曲线" />
+              <img :src="result.curvePath" alt="鲁棒性曲线" />
             </div>
             <p class="visual-desc">
               曲线分析显示：随着扰动强度逐步提升，模型准确率呈现下降趋势，反映了模型随扰动增强时的鲁棒性衰减规律。
@@ -217,9 +217,17 @@
 
         <!-- 结论 -->
         <div class="report-conclusion">
-          <div class="conclusion-label">综合评测结论:</div>
-          <div class="conclusion-text">
-            {{ conclusionText(result) }}
+          <div class="conclusion-content">
+            <div class="conclusion-label">综合评测结论:</div>
+            <div class="conclusion-text">
+              {{ conclusionText(result) }}
+            </div>
+          </div>
+          <!-- 导出按钮 -->
+          <div v-if="result.downloadUrl" class="export-wrap">
+            <button class="export-btn" @click="handleDownload">
+              <span class="export-icon">⤓</span> 导出详细评测报告
+            </button>
           </div>
         </div>
 
@@ -264,9 +272,9 @@ function gradeDesc(level) {
 }
 
 function conclusionText(r) {
-  const drop = (r.accuracy_drop * 100).toFixed(1)
-  const adv = (r.adv_accuracy * 100).toFixed(1)
-  return `自定义模型在 ${r.attack} 攻击下，准确率从 ${(r.clean_accuracy * 100).toFixed(1)}% 下降至 ${adv}%，降幅达 ${drop}%，鲁棒等级为 ${r.robust_level}。${gradeDesc(r.robust_level)}。`
+  const drop = (r.accuracyDrop * 100).toFixed(1)
+  const adv = (r.advAccuracy * 100).toFixed(1)
+  return `自定义模型在 ${r.attack} 攻击下，准确率从 ${(r.cleanAccuracy * 100).toFixed(1)}% 下降至 ${adv}%，降幅达 ${drop}%，鲁棒等级为 ${r.robustLevel}。${gradeDesc(r.robustLevel)}。`
 }
 
 function imgUrl(path) {
@@ -284,6 +292,7 @@ const attackGroups = [
   { label: '优化攻击', attacks: ['CW', 'DeepFool'] },
   { label: '黑盒攻击', attacks: ['Square Attack'] },
   { label: '综合攻击', attacks: ['AutoAttack'] },
+  { label: '自研算法攻击', attacks: ['DiffuseHide'] },
 ]
 
 const canSubmit = computed(() => selectedFile.value && form.value.attack)
@@ -316,47 +325,92 @@ function saveHistory(entry) {
   localStorage.setItem('evalHistory', JSON.stringify(list))
 }
 async function handleSubmit() {
+  console.log('========== 评测开始 ==========')
+  console.log('1. 文件:', selectedFile.value?.name, selectedFile.value?.size)
+  console.log('2. 攻击方式:', form.value.attack)
+  console.log('3. eps:', form.value.eps)
+  console.log('4. token:', localStorage.getItem('token') ? '已登录' : '未登录')
+
   loading.value = true
   result.value = null
   try {
+    console.log('5. 构造 FormData...')
     const formData = new FormData()
+    formData.append('model_pth', selectedFile.value.name)
     formData.append('model_file', selectedFile.value)
     formData.append('attack', form.value.attack)
     formData.append('dataset', 'drone_dataset')
     formData.append('eps', String(form.value.eps))
+    
+    // 打印 FormData 内容
+    for (let [key, value] of formData.entries()) {
+      console.log(`   FormData[${key}]:`, value instanceof File ? `${value.name} (${value.size} bytes)` : value)
+    }
 
+    console.log('6. 发送 POST /api/evaluate/own')
     const res = await api.post('/evaluate/own', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
+    console.log('7. 响应成功:', res)
+    console.log('8. 响应数据:', res.data)
+    
     result.value = res.data
-    // result.value = {
-    //   dataset: 'test_dataset',
-    //   attack: form.value.attack || 'FGSM',
-    //   dataset_size: 1000,
-
-    //   clean_accuracy: 0.88,
-    //   adv_accuracy: 0.42,
-    //   accuracy_drop: 0.46,
-    //   attack_success_rate: 0.58,
-
-    //   robust_score: 55.3,
-    //   robust_level: 'C',
-
-    //   compare_path: 'https://via.placeholder.com/600x300',
-    //   curve_path: 'https://via.placeholder.com/600x300',
-    // }
     saveHistory({ 
       type: 'own', 
       model: 'custom', 
       attack: form.value.attack, 
       result: res.data 
     })
+    console.log('9. 评测完成！')
   } catch (e) {
+    console.error('❌ 评测失败:')
+    console.error('   错误对象:', e)
+    console.error('   状态码:', e.response?.status)
+    console.error('   状态文本:', e.response?.statusText)
+    console.error('   错误数据:', e.response?.data)
+    console.error('   请求配置:', e.config?.url, e.config?.method)
     alert('评测失败，请检查后端连接')
   } finally {
     loading.value = false
+    console.log('========== 评测结束 ==========')
   }
-  
+}
+
+// ── 下载报告 ──────────────────────────────────
+async function handleDownload() {
+  const fileName = result.value?.downloadUrl
+  console.log('download_url:', fileName)
+
+  try {
+    const response = await fetch(`/minio/download`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ fileName: fileName })
+    })
+
+    console.log('响应状态:', response.status, response.statusText)
+
+    if (!response.ok) {
+      const text = await response.text()
+      console.error('错误响应:', text)
+      throw new Error('下载失败')
+    }
+
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName.split('/').pop()
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+  } catch (e) {
+    console.error(e)
+    alert('导出失败，请重试')
+  }
 }
 </script>
 
@@ -543,10 +597,39 @@ async function handleSubmit() {
   padding: 24px;
   border-radius: 4px;
   margin-bottom: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 40px;
 }
+.conclusion-content { flex: 1; }
 .conclusion-label { font-size: 0.9rem; font-weight: 700; color: #f43f5e; margin-bottom: 12px; }
 .conclusion-text { font-size: 0.88rem; color: #9ca3af; line-height: 1.8; }
 .conclusion-text strong { color: #f0f2f5; }
+
+.export-wrap { flex-shrink: 0; }
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f43f5e;
+  border: none;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 2px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.export-btn:hover {
+  background: #fb7185;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3);
+}
+.export-icon { font-size: 1.2rem; }
 
 /* 页脚 */
 .report-footer {

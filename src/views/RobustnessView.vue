@@ -28,7 +28,7 @@
 
     <footer class="statusbar">
       <span>模型可用：ResNet18 · MobileNetV2 · EfficientNet-b0</span>
-      <span>攻击方法：17 种</span>
+      <span>攻击方法：18 种</span>
       <span>数据集：drone_dataset</span>
     </footer>
   </div>
@@ -43,7 +43,7 @@ const cards = [
     number: '01', icon: '◎', color: 'amber',
     title: '单模型 × 单攻击',
     desc: '选择一个模型，搭配任意一种攻击方法，快速获取鲁棒性分数，结果以体检单形式呈现。',
-    tags: ['FGSM', 'PGD', 'CW', 'AutoAttack', '...共17种'],
+    tags: ['FGSM', 'PGD', 'CW', 'AutoAttack', '...共18种'],
     route: '/evaluate/one',
   },
   {

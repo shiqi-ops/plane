@@ -7,8 +7,7 @@
         <span class="page-num">01</span>
         <h1 class="page-title">单模型 × 单攻击</h1>
         <p class="page-desc">选择一个模型，搭配任意一种攻击方法，快速获取鲁棒性分数与可视化对比图</p>
-      </div>
-
+      </div>       
       <div class="form-sections">
 
         <!-- 选模型 -->
@@ -246,6 +245,7 @@ const attackGroups = [
   { label: '优化攻击', attacks: ['CW', 'DeepFool'] },
   { label: '黑盒攻击', attacks: ['Square Attack'] },
   { label: '综合攻击', attacks: ['AutoAttack'] },
+  { label: '自研算法攻击', attacks: ['DiffuseHide'] },
 ]
 
 const reportId = computed(() => 'RPT' + Date.now().toString().slice(-8))
@@ -319,20 +319,42 @@ async function handleSubmit() {
 }
 
 // ── 下载报告 ──────────────────────────────────
-function handleDownload() {
-  if (!result.value?.download_url) return
-  const baseUrl = 'http://localhost:8080/files'
-  const rawPath = result.value.download_url
-  const finalUrl = rawPath.startsWith('/') ? `${baseUrl}${rawPath}` : `${baseUrl}/${rawPath}`
-  
-  // 创建 a 标签模拟点击下载
-  const link = document.createElement('a')
-  link.href = finalUrl
-  link.setAttribute('download', rawPath.split('/').pop())
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+async function handleDownload() {
+  const fileName = result.value?.download_url
+  console.log('download_url:', fileName)
+
+  try {
+    const response = await fetch(`/minio/download`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ fileName: fileName })
+    })
+
+    console.log('响应状态:', response.status, response.statusText)
+
+    if (!response.ok) {
+      const text = await response.text()
+      console.error('错误响应:', text)
+      throw new Error('下载失败')
+    }
+
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName.split('/').pop()
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+  } catch (e) {
+    console.error(e)
+    alert('导出失败，请重试')
+  }
 }
+
 </script>
 
 <style scoped>
